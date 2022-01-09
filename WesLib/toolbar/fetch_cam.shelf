@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <tool name="Fetch Cam" label="Fetch Cam" icon="hicon:/SVGIcons.index?OBJ_fetch.svg">
+    <script scriptType="python"><![CDATA[import hou
+
+sels = hou.selectedNodes()
+objnet = hou.node("/obj")
+for sel in sels:
+    sel_pos = sel.position()
+
+    kids = sel.allNodes()
+    for kid in kids:
+        cams = []
+        if kid.type().name() == "cam":
+            cams.append(kid)
+        copycams = objnet.copyItems(cams, channel_reference_originals=True)
+        for copycam in copycams:
+            copy_pos = sel_pos
+            copy_pos += hou.Vector2(2,0)
+            copycam.setPosition(copy_pos)
+                
+            #Clean Shits
+            copycam.parmTuple("win").deleteAllKeyframes()
+            copycam.parmTuple("winsize").deleteAllKeyframes()
+            copycam.parm("aspect").deleteAllKeyframes()
+            copycam.parm("shutter").deleteAllKeyframes()
+            copycam.parm("fstop").deleteAllKeyframes()
+            copycam.parm("near").deleteAllKeyframes()
+            copycam.parm("far").deleteAllKeyframes()
+            copycam.setParms({"near":0.001, "far":10000})
+
+            fetch = copycam.createInputNode(0,"fetch")
+            fetch.setParms({"fetchobjpath":kid.path() ,"useinputoffetched":1})
+            fetch.setDisplayFlag(False)
+                ]]></script>
+    <keywordList>
+      <keyword>Fetch Camera From ABC</keyword>
+    </keywordList>
+  </tool>
+</shelfDocument>

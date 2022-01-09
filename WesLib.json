@@ -1,0 +1,18 @@
+{
+    "recommends": "houdini_version >= '17.5.321'",
+
+    "env": [
+        {
+            "WESLIB": "$HOUDINI_USER_PREF_DIR/packages/WesLib"
+        },
+        {
+            "WESOTL": "$WESLIB/otls"
+        },
+        {
+            "HOUDINI_OTLSCAN_PATH": "$HOUDINI_OTLSCAN_PATH;$WESOTL"
+        }
+    ],
+    
+    "path": "$WESLIB"
+}
+

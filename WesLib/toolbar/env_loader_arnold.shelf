@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <tool name="env_loader_aronld" label="å¯¼å¥åºæ¯ JSON" icon="hicon:/SVGIcons.index?SOP_pack.svg">
+    <script scriptType="python"><![CDATA[import hou
+import json
+import os
+
+class JsonParser(object):
+    def __init__(self, json_file):
+
+        self.context = hou.node("/obj").createNode("subnet","Env")
+        self.context.moveToGoodPosition()
+
+        # Load Json File
+        self.data = self.load_json(json_file)
+
+        # Build by Json data
+        for name,com in self.data.items():
+            self.build(name,com)
+
+    # Defind Method
+    def node(self):
+        return self.context
+
+    def load_json(self, file):
+        with open(file) as json_file:
+            return json.load(json_file)
+
+    def build(self, name, com):
+        path = com['PATH']
+        if os.path.splitext(path)[-1] == ".abc":
+            path = path.replace("abc","ass")
+        # Create Node
+        ar_node = self.context.createNode("arnold_procedural","env_"+name)
+        ar_node.setParms({"ar_filename":path, "ar_display":3})
+        ar_node.setInput(0,self.context.indirectInputs()[0])
+        ar_node.moveToGoodPosition()
+
+        # Set Transform
+        xforms = com['COM'].items()[0][1]
+
+        for frame,xform in xforms.items():
+            
+            frame = int(frame)
+
+            trans   = ar_node.parmTuple("t")
+            rot     = ar_node.parmTuple("r")
+            scale   = ar_node.parmTuple("s")
+
+            tx_key  = hou.Keyframe()
+            tx_key.setFrame(frame)
+            tx_key.setValue(xform[0][0])
+
+            ty_key  = hou.Keyframe()
+            ty_key.setFrame(frame)
+            ty_key.setValue(xform[0][1])
+
+            tz_key  = hou.Keyframe()
+            tz_key.setFrame(frame)
+            tz_key.setValue(xform[0][2])
+
+            rx_key  = hou.Keyframe()
+            rx_key.setFrame(frame)
+            rx_key.setValue(xform[1][0])
+
+            ry_key  = hou.Keyframe()
+            ry_key.setFrame(frame)
+            ry_key.setValue(xform[1][1])
+
+            rz_key  = hou.Keyframe()
+            rz_key.setFrame(frame)
+            rz_key.setValue(xform[1][2])
+
+            sx_key  = hou.Keyframe()
+            sx_key.setFrame(frame)
+            sx_key.setValue(xform[2][0])
+
+            sy_key  = hou.Keyframe()
+            sy_key.setFrame(frame)
+            sy_key.setValue(xform[2][1])
+
+            sz_key  = hou.Keyframe()
+            sz_key.setFrame(frame)
+            sz_key.setValue(xform[2][2])
+
+            trans.setKeyframe((tx_key,ty_key,tz_key))
+            rot.setKeyframe((rx_key,ry_key,rz_key))
+            scale.setKeyframe((sx_key,sy_key,sz_key))
+
+
+
+
+
+#Run
+json_file = hou.ui.selectFile( title = "Select JSON" , pattern = "*.json")
+json_file_abs = hou.expandString(json_file)
+
+sub = JsonParser(json_file_abs).node()
+
+sels = hou.selectedNodes()
+if len(sels) != 0 and sels[-1].type().category().label() == "Objects" and sels[-1].type().name() == "null":
+    sub.setInput(0, sels[0])]]></script>
+  </tool>
+</shelfDocument>

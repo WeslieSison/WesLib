@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <tool name="ass_export" label="ASS_Export" icon="hicon:/SVGIcons.index?VOP_subnetconnector.svg">
+    <script scriptType="python"><![CDATA[import hou
+
+outnet = hou.node("/out")
+nodes = hou.selectedNodes()
+
+ar_rop = outnet.createNode("arnold","ass_output")
+ar_rop.moveToGoodPosition()
+
+#set_initial_parms
+ar_rop.setParms({"camera":"", "vobject":"", "alights":"", "ar_picture":""})
+ar_rop.setParms({"ar_ass_export_enable": 1})
+ar_rop.setParms({"ar_ass_file": "$HIP/ass/$OS/$OS.$F4.ass"})
+ar_rop.setParms({"ar_ass_export_cameras":0, "ar_ass_export_lights":0, "ar_ass_export_color_managers":0})
+ar_rop.setParms({"ar_ass_export_drivers":0})
+
+#assign selected nodes to object
+obj_names = ""
+for node in nodes:
+    obj_names += node.name() + " "
+
+ar_forceobject = ar_rop.parm("forceobject").set(obj_names)
+
+]]></script>
+  </tool>
+</shelfDocument>

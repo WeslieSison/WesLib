@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <tool name="update_cam" label="Update ABC Cam" icon="hicon:/SVGIcons.index?OBJ_camera.svg">
+    <script scriptType="python"><![CDATA[# -*- coding: utf-8 -*-
+
+import hou
+from weslie import wes_Utils as wesutil
+     
+#Run Function
+sels = hou.selectedNodes()
+for sel in sels:
+    if sel.type().name()=="alembicarchive":
+        wesutil.updateabcarchive(sel)
+]]></script>
+  </tool>
+</shelfDocument>
