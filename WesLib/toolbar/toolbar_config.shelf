@@ -24,7 +24,6 @@
     <memberTool name="update_for_developer"/>
     <memberTool name="update_for_user"/>
     <memberTool name="unlock_all_hda"/>
-    <memberTool name="send_efx_cache"/>
     <memberTool name="send_sim_to_ddl"/>
   </toolshelf>
 </shelfDocument>

@@ -5,7 +5,7 @@
  Note, that two definitions of the same element are not allowed in
  a single file. -->
 
-  <tool name="env_loader_aronld" label="å¯¼å¥åºæ¯ JSON" icon="hicon:/SVGIcons.index?SOP_pack.svg">
+  <tool name="env_loader_aronld" label="Import JSON Scene" icon="hicon:/SVGIcons.index?SOP_pack.svg">
     <script scriptType="python"><![CDATA[import hou
 import json
 import os
