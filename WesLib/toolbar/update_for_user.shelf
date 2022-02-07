@@ -9,34 +9,10 @@
     <script scriptType="python"><![CDATA[# -*- coding: utf-8 -*-
 
 import hou
-import os
-import shutil
-
-def updatepackage_foruser():
-    houdini_ver = hou.applicationVersionString()[:-4]
-    
-    target_path = hou.expandString("$HOME")+"/Houdini"+houdini_ver+"/packages/IronFan_Lib"
-    package_path = "T:/VFX_Folder/packages/IronFan_Lib/IronFan_Lib"
-
-    confirm = True
-    if os.path.exists(package_path):
-        if os.path.exists(target_path):
-            confirm = hou.ui.displayConfirmation("ç¡®è®¤æ¯å¦è¦æ´æ°IronFan_Lib")
-            if confirm:
-                shutil.rmtree(target_path)
-                print("--- é¢å é¤ ---")
-        if confirm:
-            print("--- æ­£å¨æ´æ°IronFan_Lib ---")
-            shutil.copytree(package_path,target_path)
-            hou.ui.displayMessage("æ´æ°å®æ, éå¯Houdiniåçæ")
-    else:
-        hou.ui.displayMessage("Packageè·¯å¾ä¸å­å¨")
-
-#run function
-
-updatepackage_foruser()
+from weslie import wes_Utils as wesutil
 
 
+wesutil.updatepackage_foruser()
 
 ]]></script>
   </tool>
