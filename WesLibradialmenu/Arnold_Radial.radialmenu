@@ -1,0 +1,16 @@
+{
+	"fileversion":"18.5.408",
+	"name":"Arnold_Radial",
+	"categories":"Standard",
+	"pane":"network",
+	"label":"Arnold_Radial",
+	"type":"submenu",
+	"items":{
+		"4":{
+			"label":"ar_Solo",
+			"type":"script_action",
+			"icon":"hicon:/SVGIcons.index?DOP_sopgeo.svg",
+			"script":"pane = kwargs['pane']\nnetwork = pane.pwd()\n\nselect = hou.selectedNodes()[0]\nnodes = network.children()\n\nfor node in nodes:\n    if node.type().name() == \"arnold_material\":\n        node.setInput(0,select,0)"
+		}
+	}
+}

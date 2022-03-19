@@ -1,0 +1,52 @@
+{
+	"fileversion":"18.5.351",
+	"name":"Attribute Radial",
+	"categories":"Standard",
+	"pane":"network",
+	"label":"Attribute Radial",
+	"type":"submenu",
+	"items":{
+		"0":{
+			"label":"Randomize",
+			"type":"script_action",
+			"icon":"SOP_attribrandomize",
+			"script":"pane = kwargs['pane']\nnetwork = pane.pwd()\nnet_editor = hou.ui.paneTabUnderCursor()\ncursor_pos = net_editor.cursorPosition()\n\nnode = network.createNode(\"attribrandomize\")\nnode.setPosition(cursor_pos)"
+		},
+		"1":{
+			"label":"Attribute Adjust Float",
+			"type":"script_action",
+			"icon":"SOP_attribadjustfloat",
+			"script":"pane = kwargs['pane']\nnetwork = pane.pwd()\nnet_editor = hou.ui.paneTabUnderCursor()\ncursor_pos = net_editor.cursorPosition()\n\nnode = network.createNode(\"attribadjustfloat\")\nnode.setPosition(cursor_pos)"
+		},
+		"2":{
+			"label":"Noise",
+			"type":"script_action",
+			"icon":"SOP_attribnoise",
+			"script":"pane = kwargs['pane']\nnetwork = pane.pwd()\nnet_editor = hou.ui.paneTabUnderCursor()\ncursor_pos = net_editor.cursorPosition()\n\nnode = network.createNode(\"attribnoise\")\nnode.setPosition(cursor_pos)"
+		},
+		"3":{
+			"label":"Attribute Adjust Vector",
+			"type":"script_action",
+			"icon":"SOP_attribadjustvector",
+			"script":"pane = kwargs['pane']\nnetwork = pane.pwd()\nnet_editor = hou.ui.paneTabUnderCursor()\ncursor_pos = net_editor.cursorPosition()\n\nnode = network.createNode(\"attribadjustvector\")\nnode.setPosition(cursor_pos)"
+		},
+		"4":{
+			"label":"VOP",
+			"type":"script_action",
+			"icon":"SOP_attribvop",
+			"script":"pane = kwargs['pane']\nnetwork = pane.pwd()\nnet_editor = hou.ui.paneTabUnderCursor()\ncursor_pos = net_editor.cursorPosition()\n\nnode = network.createNode(\"attribvop\")\nnode.setPosition(cursor_pos)"
+		},
+		"6":{
+			"label":"Wrangle",
+			"type":"script_action",
+			"icon":"SOP_attribwrangle",
+			"script":"pane = kwargs['pane']\nnetwork = pane.pwd()\nnet_editor = hou.ui.paneTabUnderCursor()\ncursor_pos = net_editor.cursorPosition()\n\nnode = network.createNode(\"attribwrangle\")\nnode.setPosition(cursor_pos)"
+		},
+		"7":{
+			"label":"Attribute Delete",
+			"type":"script_action",
+			"icon":"SOP_attribdelete",
+			"script":"pane = kwargs['pane']\nnetwork = pane.pwd()\nnet_editor = hou.ui.paneTabUnderCursor()\ncursor_pos = net_editor.cursorPosition()\n\nnode = network.createNode(\"attribdelete\")\nnode.setPosition(cursor_pos)"
+		}
+	}
+}

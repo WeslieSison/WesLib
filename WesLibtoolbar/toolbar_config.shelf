@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <toolshelf name="Weslie_Tools" label="weslie_tools">
+    <memberTool name="Fbx_Normals"/>
+    <memberTool name="object_merge"/>
+    <memberTool name="Ar_Pyro_Convert"/>
+    <memberTool name="AR_Pyro_relative_convert"/>
+    <memberTool name="ass_export"/>
+    <memberTool name="fluidsource"/>
+    <memberTool name="Arnold DEEP"/>
+    <memberTool name="set_res_858"/>
+    <memberTool name="set_res_1080"/>
+    <memberTool name="abc_laoder"/>
+    <memberTool name="abc_loader_adv"/>
+    <memberTool name="update_cam"/>
+    <memberTool name="Fetch Cam"/>
+    <memberTool name="env_loader_aronld"/>
+    <memberTool name="ass_to_abc"/>
+    <memberTool name="update_for_developer"/>
+    <memberTool name="update_for_user"/>
+    <memberTool name="unlock_all_hda"/>
+    <memberTool name="send_sim_to_ddl"/>
+    <memberTool name="add_ver_parm"/>
+  </toolshelf>
+</shelfDocument>
