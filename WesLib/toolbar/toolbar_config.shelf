@@ -25,5 +25,6 @@
     <memberTool name="update_for_user"/>
     <memberTool name="unlock_all_hda"/>
     <memberTool name="send_sim_to_ddl"/>
+    <memberTool name="add_ver_parm"/>
   </toolshelf>
 </shelfDocument>

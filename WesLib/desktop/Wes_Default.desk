@@ -38,6 +38,7 @@ root {
                     pane panetab15 -a 0 -l 0 -H /obj/ -T OBJ -m materialpalette
                     pane panetab18 -a 0 -l 0 -H /obj/ -T OBJ -m python
                     pane panetab7 -a 1 -l 10 -H /obj/ -T OBJ -m pythonpanel
+                    pane panetab8 -a 1 -l 10 -H /obj/ -T OBJ -m pythonpanel
                 }
             }
             tabs 0 1 {
@@ -61,7 +62,7 @@ ropview -c 0 panetab17
 parmeditor -T 0.25 -w 0 panetab5
 takelist -w 1 -G 0.5 panetab6
 performance -c on -d on -f on -g off -j on -k on -m off -n on -o on -t off -v on -p on -y on -u on -e off -r absolute -R seconds -w tree panetab12
-networkeditor -p '{\n	"showspareinputdep":"1",\n	"showchilddep":"1",\n	"showdep":"0",\n	"showtaskgraphperf":"0",\n	"taskgraphperfstatname":"Cook Time",\n	"perfstatname":"Time",\n	"showperfstats":"1",\n	"grouplistsplit":"0.75",\n	"showtree":"0",\n	"showtypesidebar":"0",\n	"taskgraphsortcriteria":"Automatic",\n	"showparmdialogmax":"1",\n	"treesplit":"0.25",\n	"palettesize":"150 150",\n	"typesidebarsplit":"0.25",\n	"taskgraphcollapsemode":"Off",\n	"workitemcolorattribute":"",\n	"gridmode":"0",\n	"overviewbounds":"0.000000 0.000000 203.400000 86.100000",\n	"overviewmode":"2",\n	"showgrouplist":"0",\n	"palettemode":"0",\n	"useworkitemcolorattribute":"0",\n	"showtasksmenu":"1",\n	"backgroundimageediting":"0",\n	"backgroundimagebrightness":"1.0",\n	"gridystep":"1.0",\n	"palettecolors":"",\n	"showmenu":"1",\n	"gridxstep":"2.0",\n	"showparmdialog":"0"\n}\n' panetab9
+networkeditor -p '{\n	"showspareinputdep":"1",\n	"showchilddep":"1",\n	"showdep":"0",\n	"showtaskgraphperf":"0",\n	"taskgraphperfstatname":"Cook Time",\n	"perfstatname":"Time",\n	"showperfstats":"1",\n	"grouplistsplit":"0.75",\n	"showtree":"0",\n	"showtypesidebar":"0",\n	"taskgraphsortcriteria":"Automatic",\n	"showparmdialogmax":"1",\n	"treesplit":"0.25",\n	"palettesize":"150 150",\n	"typesidebarsplit":"0.25",\n	"taskgraphcollapsemode":"Off",\n	"workitemcolorattribute":"",\n	"gridmode":"0",\n	"overviewbounds":"0.000000 0.000000 186.600000 126.300000",\n	"overviewmode":"2",\n	"showgrouplist":"0",\n	"palettemode":"0",\n	"useworkitemcolorattribute":"0",\n	"showtasksmenu":"1",\n	"backgroundimageediting":"0",\n	"backgroundimagebrightness":"1.0",\n	"gridystep":"1.0",\n	"palettecolors":"",\n	"showmenu":"1",\n	"gridxstep":"2.0",\n	"showparmdialog":"0"\n}\n' panetab9
 netcolumns -c display,xray,select,origin,capture,bone -n OBJ panetab9
 netcolumns -c display,render,template,selectabletemplate,highlight,unload,bypass,lock -n SOP panetab9
 netcolumns -c delscript,comment -n CHOPNET panetab9
@@ -79,7 +80,7 @@ netcolumns -c display,bypass,delscript,comment,input -n LOP panetab9
 netcolumns -c delscript,comment -n MGR panetab9
 netcolumns -c delscript,comment -n DIR panetab9
 pythonpanel -s on -t off -n contexteditor panetab7
-networkeditor -p '{\n	"showspareinputdep":"1",\n	"showchilddep":"1",\n	"showdep":"0",\n	"showtaskgraphperf":"0",\n	"taskgraphperfstatname":"Cook Time",\n	"perfstatname":"Time",\n	"showperfstats":"1",\n	"grouplistsplit":"0.75",\n	"showtree":"0",\n	"showtypesidebar":"0",\n	"taskgraphsortcriteria":"Automatic",\n	"showparmdialogmax":"1",\n	"treesplit":"0.25",\n	"palettesize":"135 135",\n	"typesidebarsplit":"0.25",\n	"taskgraphcollapsemode":"Off",\n	"workitemcolorattribute":"",\n	"gridmode":"0",\n	"overviewbounds":"0.000000 0.000000 198.829412 176.307545",\n	"overviewmode":"2",\n	"showgrouplist":"0",\n	"palettemode":"0",\n	"useworkitemcolorattribute":"1",\n	"showtasksmenu":"1",\n	"backgroundimageediting":"0",\n	"backgroundimagebrightness":"1.0",\n	"gridystep":"1.0",\n	"palettecolors":"",\n	"showmenu":"1",\n	"gridxstep":"2.0",\n	"showparmdialog":"0"\n}\n' panetab20
+networkeditor -p '{\n	"showspareinputdep":"1",\n	"showchilddep":"1",\n	"showdep":"0",\n	"showtaskgraphperf":"0",\n	"taskgraphperfstatname":"Cook Time",\n	"perfstatname":"Time",\n	"showperfstats":"1",\n	"grouplistsplit":"0.75",\n	"showtree":"0",\n	"showtypesidebar":"0",\n	"taskgraphsortcriteria":"Automatic",\n	"showparmdialogmax":"1",\n	"treesplit":"0.25",\n	"palettesize":"135 135",\n	"typesidebarsplit":"0.25",\n	"taskgraphcollapsemode":"Off",\n	"workitemcolorattribute":"",\n	"gridmode":"0",\n	"overviewbounds":"0.000000 0.000000 174.823161 240.300000",\n	"overviewmode":"2",\n	"showgrouplist":"0",\n	"palettemode":"0",\n	"useworkitemcolorattribute":"1",\n	"showtasksmenu":"1",\n	"backgroundimageediting":"0",\n	"backgroundimagebrightness":"1.0",\n	"gridystep":"1.0",\n	"palettecolors":"",\n	"showmenu":"1",\n	"gridxstep":"2.0",\n	"showparmdialog":"0"\n}\n' panetab20
 netcolumns -c display,xray,select,origin,capture,bone -n OBJ panetab20
 netcolumns -c display,render,template,selectabletemplate,highlight,unload,bypass,lock -n SOP panetab20
 netcolumns -c delscript,comment -n CHOPNET panetab20
@@ -96,3 +97,4 @@ netcolumns -c delscript,comment -n TOPNET panetab20
 netcolumns -c display,bypass,delscript,comment,input -n LOP panetab20
 netcolumns -c delscript,comment -n MGR panetab20
 netcolumns -c delscript,comment -n DIR panetab20
+pythonpanel -s on -t on -n sesi_quick_start panetab8
