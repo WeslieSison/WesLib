@@ -6,20 +6,23 @@ import time
 import json
 from hutil.Qt import QtWidgets, QtUiTools
 
-#Set UI Path
-uipath = hou.expandString("$WESLIB")+"/python_panels/ui/Wes_ProjBrowser.ui"
 
 #Cutomize Config
 projects_root = "S:/Project/"
-concept_folder = ["01_Concept/01_Storyboard","01_Concept/02_Layout","01_Concept/03_Anim","01_Concept/04_Ref"]
-projects_folder_preset = [concept_folder,"02_Assets","03_HProject","04_Comp","05_Cut","06_Submit","07_Feedback"]
-hproject_name = "03_HProject"
 tests_root = "S:/Test/"
 default_res = [1920,1080]
 default_fps = 25
 
+#Project Structure
+concept_folder = ["01_Concept/01_Storyboard","01_Concept/02_Layout","01_Concept/03_Anim","01_Concept/04_Ref"]
+projects_folder_preset = [concept_folder,"02_Assets","03_HProject","04_Comp","05_Cut","06_Submit","07_Feedback"]
+hproject_name = "03_HProject"
+
 #Project Config
 test_names = os.listdir(tests_root)
+
+#Set UI Path
+uipath = hou.expandString("$WESLIB")+"/python_panels/ui/Wes_ProjBrowser.ui"
 
 
 class ProjBrowser(QtWidgets.QWidget):
