@@ -16,6 +16,8 @@
     <interfaceItem name="ViewerStateBrowser"/>
     <separatorItem/>
     <interfaceItem name="wes_projbrowser"/>
+    <interfaceItem name="interface1"/>
+    <interfaceItem name="interface2"/>
   </interfacesMenu>
   <interfacesMenu type="panetab">
     <interfaceItem name="ConstraintBrowser"/>

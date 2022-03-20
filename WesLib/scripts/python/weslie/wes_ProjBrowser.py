@@ -4,11 +4,9 @@ import os
 import re
 import time
 import json
-from weslie import wes_Utils as wesutil
 from hutil.Qt import QtWidgets, QtUiTools
 
-
-
+#Set UI Path
 uipath = hou.expandString("$WESLIB")+"/python_panels/ui/Wes_ProjBrowser.ui"
 
 #Cutomize Config
@@ -17,6 +15,8 @@ concept_folder = ["01_Concept/01_Storyboard","01_Concept/02_Layout","01_Concept/
 projects_folder_preset = [concept_folder,"02_Assets","03_HProject","04_Comp","05_Cut","06_Submit","07_Feedback"]
 hproject_name = "03_HProject"
 tests_root = "S:/Test/"
+default_res = [1920,1080]
+default_fps = 25
 
 #Project Config
 test_names = os.listdir(tests_root)
@@ -68,8 +68,8 @@ class ProjBrowser(QtWidgets.QWidget):
 
         #Connect Buttons
         self.browse_mode.currentTextChanged.connect(self.refreshprojnames)
-        self.proj_name.currentTextChanged.connect(self.refreshprojconfig)
         self.new_proj.clicked.connect(self.newproj)
+        self.proj_name.currentTextChanged.connect(self.refreshprojconfig)
         self.scene.currentTextChanged.connect(self.refreshshotlist)
         self.enter_shot.clicked.connect(self.entershot)
         self.new_shot.clicked.connect(self.newshot)
@@ -81,14 +81,11 @@ class ProjBrowser(QtWidgets.QWidget):
         self.load_hip.clicked.connect(self.loadhip)
         self.open_folder.clicked.connect(self.openfolder)
 
-
         #Set Layout        
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.ui)  
         self.setLayout(layout)
         
-
-
     def getshotinfo(self):
         self.jobenv = hou.getenv("JOB")+"/"
         try:
@@ -111,28 +108,44 @@ class ProjBrowser(QtWidgets.QWidget):
     def refreshprojnames(self):
         self.proj_name.clear()
         if(self.browse_mode.currentText()=="Project"):
-            proj_names = os.listdir(projects_root)
-            proj_names.reverse()
-            self.proj_name.addItems(proj_names)
             self.scene.setEnabled(True)
             self.scene_label.setEnabled(True)
             self.shot.setEnabled(True)
             self.shot_label.setEnabled(True)
             self.new_shot.setEnabled(True)
+            self.enter_shot.setEnabled(True)
+            self.new_proj.setEnabled(True)
+            proj_names = os.listdir(projects_root)
+            proj_names.reverse()
+            self.proj_name.addItems(proj_names)
         elif(self.browse_mode.currentText()=="Test"):
+            self.scene.setEnabled(False)
+            self.scene_label.setEnabled(False)
+            self.shot.setEnabled(False)
+            self.shot_label.setEnabled(False)
+            self.new_shot.setEnabled(True)
+            self.enter_shot.setEnabled(True)
+            self.new_proj.setEnabled(True)
             proj_names = os.listdir(tests_root)
             proj_names.reverse()
             self.proj_name.addItems(proj_names)
+        else:
             self.scene.setEnabled(False)
             self.scene_label.setEnabled(False)
             self.shot.setEnabled(False)
             self.shot_label.setEnabled(False)
             self.new_shot.setEnabled(False)
-
+            self.enter_shot.setEnabled(False)
+            self.new_proj.setEnabled(False)
     def refresh_by_jobenv(self):
         #print("Fuck")
         self.jobenv = hou.getenv("JOB")+"/"
-        self.refresh_hiplist(self.jobenv)
+        self.hipenv = hou.getenv("HIP")+"/"
+        if os.path.exists(self.jobenv):
+            self.refresh_hiplist(self.jobenv)
+        else:
+            print(u'$JOB path does not exist, using $HIP instead')
+            self.refresh_hiplist(self.hipenv)
 
     def refresh_hiplist(self, proj_dir):
         self.hiplist.clear()
@@ -152,15 +165,14 @@ class ProjBrowser(QtWidgets.QWidget):
     def loadconfig(self):
         projname = self.proj_name.currentText()
         jsonpath = projects_root + projname + "/" + "project_config.json"
-
         #initial config data
         self.proj_config = {}
         self.date = ""
         self.projpurename = ""
-        self.res = [1920,1080]
-        self.fps = 25
-        self.havescene = True
-        self.haveshot = True
+        self.res = default_res
+        self.fps = default_fps
+        self.havescene = False
+        self.haveshot = False
 
         #load config data
         if os.path.exists(jsonpath):
@@ -172,7 +184,7 @@ class ProjBrowser(QtWidgets.QWidget):
             self.fps = self.proj_config.get("fps")
             self.havescene = self.proj_config.get("havescene")
             self.haveshot = self.proj_config.get("haveshot")
-        else:
+        elif projname != "" and not projname.isspace():
             hou.ui.displayMessage(u"Cannot find Project Config File | 找不到项目配置文件")
 
         #Set Scene and Shot State
@@ -225,19 +237,29 @@ class ProjBrowser(QtWidgets.QWidget):
         new_projname = ""
         if(self.browse_mode.currentText()=="Project"):
             new_projname = self.confignewproj()
-            if not new_projname == "" or new_projname.isspace():
+            if new_projname != "" and new_projname.isspace()==False:
                 self.refreshprojnames()
                 self.proj_name.setCurrentText(new_projname)
         elif(self.browse_mode.currentText()=="Test"):
             new_projname = self.confignewtest()
-            if not new_projname == "" or new_projname.isspace():
+            if new_projname != "" and new_projname.isspace()==False:
                 self.refreshprojnames()
                 self.proj_name.setCurrentText(new_projname)
         
     def newshot(self):
-        proj_pure_name = self.projpurename
-        proj_name = self.proj_name.currentText()
-        proj_root = projects_root + proj_name +'/'+ hproject_name + "/"
+        if self.browse_mode.currentText() == "Project":
+            proj_pure_name = self.projpurename
+            proj_name = self.proj_name.currentText()
+            proj_root = projects_root + proj_name +'/'+ hproject_name + "/"
+        if self.browse_mode.currentText() == "Test":
+            self.havescene = False
+            self.haveshot = False
+            proj_name = self.proj_name.currentText()
+            try:
+                proj_pure_name = "_".join(proj_name.split("_")[1:])
+            except:
+                proj_pure_name = proj_name
+            proj_root = tests_root + proj_name + "/"
         proj_fps = self.fps
         scene = self.scene.currentText()
         shot = self.shot.currentText()
@@ -253,21 +275,32 @@ class ProjBrowser(QtWidgets.QWidget):
             proj_dir += "SHOT_" +shot +"/"
             hipname += "_shot"+shot
         hipname += "_"+content+"_v01.001"+".hip"
-
-        if os.path.exists(proj_dir):
-            hou.ui.displayMessage(u"Shot Already Exists | 该镜头已存在噢")
-        else:
-            create_mode = hou.ui.displayCustomConfirmation(u"新建hip还是直接另存当前hip?",buttons=("新建","另存"))
-            if create_mode !=1:
-                os.makedirs(proj_dir)
+        scene_or_shot = False
+        path_exist = False
+        if self.havescene or self.haveshot:
+            scene_or_shot = True
+            if os.path.exists(proj_dir):
+                path_exist = True
+                hou.ui.displayMessage(u"Shot Already Exists | 该镜头已存在噢")
+        elif not self.havescene or not self.haveshot:
+            scene_or_shot = False
+            if os.path.exists(proj_dir+hipname):
+                path_exist = True
+                hou.ui.displayMessage(u"Shot Already Exists | 该镜头已存在噢")
+        if not path_exist:
+            create_mode = hou.ui.displayCustomConfirmation(u"新建hip还是直接另存当前hip?",buttons=(u"新建",u"另存",u"取消"))
+            if create_mode ==0:
+                if scene_or_shot:
+                    os.makedirs(proj_dir)
                 hou.hipFile.clear()
                 hou.hipFile.save(proj_dir+hipname)
                 hou.setFps(proj_fps)
                 os.environ["JOB"] = proj_dir
                 hou.allowEnvironmentToOverwriteVariable("JOB",True)
                 self.refresh_by_jobenv()
-            else:
-                os.makedirs(proj_dir)
+            elif create_mode ==1:
+                if scene_or_shot:
+                    os.makedirs(proj_dir)
                 hou.hipFile.save(proj_dir+hipname)
                 hou.setFps(proj_fps)
                 os.environ["JOB"] = proj_dir
@@ -283,19 +316,21 @@ class ProjBrowser(QtWidgets.QWidget):
 
     def entershot(self):
         proj_name = self.proj_name.currentText()
-        proj_root = ""
-        if(self.browse_mode.currentText()=="Project"):
-            proj_root = projects_root + proj_name +'/'+ hproject_name + "/"
-        elif(self.browse_mode.currentText()=="Test"):
-            proj_root = tests_root + proj_name +'/'
         scene = self.scene.currentText()
         shot = self.shot.currentText()
+        proj_root = ""
+        proj_dir = ""
+        if(self.browse_mode.currentText()=="Project"):
+            proj_root = projects_root + proj_name +'/'+ hproject_name + "/"
+            proj_dir = proj_root
+            if self.havescene:
+                proj_dir += "SCENE_" +scene + "/"
+            if self.haveshot:
+                proj_dir += "SHOT_" +shot +"/"
+        elif(self.browse_mode.currentText()=="Test"):
+            proj_root = tests_root + proj_name +'/'
+            proj_dir = proj_root
         #proj_dir = proj_root+ "SCENE_"+scene + "/_SHOT_"+ shot + "/"
-        proj_dir = proj_root
-        if self.havescene:
-            proj_dir += "SCENE_" +scene + "/"
-        if self.haveshot:
-            proj_dir += "SHOT_" +shot +"/"
         if os.path.exists(proj_dir):
             self.refresh_hiplist(proj_dir)
         else:

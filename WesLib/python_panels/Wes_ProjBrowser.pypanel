@@ -19,7 +19,7 @@ if sys.version_info[0]==3:
 else:
     reload(wes_ProjBrowser)
 
-def createInterface(): 
+def createInterface():
     widget = wes_ProjBrowser.ProjBrowser()
     return widget]]></script>
     <includeInPaneTabMenu menu_position="0" create_separator="false"/>
