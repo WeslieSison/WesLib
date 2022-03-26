@@ -45,12 +45,12 @@ def initialize_config():
             
             # Create Config File
             if check:
+                projects_root = projects_root.replace("\\","/")
+                tests_root = tests_root.replace("\\","/")
                 if projects_root[-1] != "/":
                     projects_root += "/"
                 if tests_root[-1] != "/":
                     tests_root += "/"
-                projects_root = projects_root.replace("\\","/")
-                tests_root = tests_root.replace("\\","/")
                 initial_info = {
                     "projects_root" : projects_root,
                     "tests_root" : tests_root,
