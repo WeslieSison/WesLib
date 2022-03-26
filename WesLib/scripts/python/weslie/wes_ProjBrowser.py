@@ -7,11 +7,71 @@ import json
 from hutil.Qt import QtWidgets, QtUiTools
 
 
+def initialize_config():
+    initial_config = {}
+    # Check and Load Config
+    jsonfile = hou.expandString("$WESLIB/python_panels") + "/project_browser_config.json"
+    if os.path.exists(jsonfile):
+        with open(jsonfile) as json_file:
+            initial_config = json.load(json_file)
+    else:
+        input_confirm, input_info = hou.ui.readMultiInput(u"Initialize Your Browser | 初始化配置", ('Projects Root','Tests Root','Default_ResX','Default_ResY','Default_FPS'),
+            initial_contents = ("","","1920","1080","25"),
+            title = "Input Config",
+            default_choice = 0, close_choice = 1
+            )
+        if input_confirm == 0:
+            check = False
+            projects_root =  input_info[0]
+            tests_root = input_info[1]
+            default_resx = input_info[2]
+            default_resy = input_info[3]
+            default_fps = input_info[4]
+            # Check if Every Info is OK
+            type_is_ok = True
+            check_digit_list = input_info[2:5]
+            for info in check_digit_list:
+                if info == "" or info.isspace() or not info.isdigit():
+                    hou.ui.displayMessage(u"Wrong Input Type | 输入的信息格式错误",severity=hou.severityType.Error)
+                    type_is_ok = False
+                    break
+            if type_is_ok:
+                if not os.path.exists(projects_root) or os.path.isfile(projects_root):
+                    hou.ui.displayMessage(u"Projects Root does not exists | 项目根目录路劲不存在",severity=hou.severityType.Error)
+                elif not os.path.exists(tests_root) or os.path.isfile(tests_root):
+                    hou.ui.displayMessage(u"Tests Root does not exists | 测试根目录路劲不存在",severity=hou.severityType.Error)
+                else:
+                    check = True
+            
+            # Create Config File
+            if check:
+                if projects_root[-1] != "/":
+                    projects_root += "/"
+                if tests_root[-1] != "/":
+                    tests_root += "/"
+                projects_root = projects_root.replace("\\","/")
+                tests_root = tests_root.replace("\\","/")
+                initial_info = {
+                    "projects_root" : projects_root,
+                    "tests_root" : tests_root,
+                    "default_res" : [int(default_resx),int(default_resy)],
+                    "default_fps" : int(default_fps)
+                }
+                initial_info_json = json.dumps(initial_info)
+                config_dir = hou.expandString("$WESLIB/python_panels")
+                jsonfile = "/".join([config_dir, "project_browser_config.json"])
+                with open(jsonfile,"w") as config_file:
+                    config_file.write(initial_info_json)
+        initial_config = initialize_config()
+    return initial_config
+
+
 #Cutomize Config
-projects_root = "S:/Project/"
-tests_root = "S:/Test/"
-default_res = [1920,1080]
-default_fps = 25
+initial_config = initialize_config()
+projects_root = initial_config.get("projects_root")
+tests_root = initial_config.get("tests_root")
+default_res = initial_config.get("default_res")
+default_fps = initial_config.get("default_fps")
 
 #Project Structure
 concept_folder = ["01_Concept/01_Storyboard","01_Concept/02_Layout","01_Concept/03_Anim","01_Concept/04_Ref"]
