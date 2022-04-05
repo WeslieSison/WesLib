@@ -351,7 +351,7 @@ class ProjBrowser(QtWidgets.QWidget):
                 path_exist = True
                 hou.ui.displayMessage(u"Shot Already Exists | 该镜头已存在噢")
         if not path_exist:
-            create_mode = hou.ui.displayCustomConfirmation(u"新建hip还是直接另存当前hip?",buttons=(u"新建",u"另存",u"取消"))
+            create_mode = hou.ui.displayCustomConfirmation(u"Create New empty hip or Save current hip as new hip? | 新建空白hip还是直接另存当前hip?",buttons=(u"Create | 新建",u"Save as | 另存",u"Cancel | 取消"))
             if create_mode ==0:
                 if scene_or_shot:
                     os.makedirs(proj_dir)
