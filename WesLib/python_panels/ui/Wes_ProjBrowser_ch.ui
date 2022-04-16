@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>509</width>
+    <width>517</width>
     <height>627</height>
    </rect>
   </property>
@@ -40,13 +40,13 @@
       <widget class="QPushButton" name="new_shot">
        <property name="minimumSize">
         <size>
-         <width>115</width>
+         <width>80</width>
          <height>25</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>200</width>
+         <width>2000</width>
          <height>25</height>
         </size>
        </property>
@@ -60,6 +60,7 @@
         <string notr="true">QPushButton {
 border-radius: 12px;
 background-color:rgb(96, 68, 100);
+font: 10pt &quot;Microsoft YaHei UI&quot;;
 }
 QPushButton:hover{
 background-color:rgb(127, 104, 130);
@@ -75,13 +76,13 @@ background-color:rgb(127, 104, 130);
       <widget class="QPushButton" name="enter_shot">
        <property name="minimumSize">
         <size>
-         <width>115</width>
+         <width>80</width>
          <height>25</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>200</width>
+         <width>2000</width>
          <height>25</height>
         </size>
        </property>
@@ -97,6 +98,7 @@ background-color:rgb(127, 104, 130);
         <string notr="true">QPushButton {
 border-radius: 12px;
 background-color:rgb(96, 68, 100);
+font: 10pt &quot;Microsoft YaHei UI&quot;;
 }
 QPushButton:hover{
 background-color:rgb(127, 104, 130);
@@ -112,13 +114,13 @@ background-color:rgb(127, 104, 130);
       <widget class="QPushButton" name="current_shot">
        <property name="minimumSize">
         <size>
-         <width>115</width>
+         <width>80</width>
          <height>25</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>200</width>
+         <width>2000</width>
          <height>25</height>
         </size>
        </property>
@@ -132,6 +134,7 @@ background-color:rgb(127, 104, 130);
         <string notr="true">QPushButton {
 border-radius: 12px;
 background-color:rgb(96, 68, 100);
+font: 10pt &quot;Microsoft YaHei UI&quot;;
 }
 QPushButton:hover{
 background-color:rgb(127, 104, 130);
@@ -147,13 +150,13 @@ background-color:rgb(127, 104, 130);
       <widget class="QPushButton" name="set_proj_hip">
        <property name="minimumSize">
         <size>
-         <width>120</width>
+         <width>100</width>
          <height>25</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>200</width>
+         <width>2000</width>
          <height>25</height>
         </size>
        </property>
@@ -167,6 +170,7 @@ background-color:rgb(127, 104, 130);
         <string notr="true">QPushButton {
 border-radius: 12px;
 background-color:rgb(96, 68, 100);
+font: 10pt &quot;Microsoft YaHei UI&quot;;
 }
 QPushButton:hover{
 background-color:rgb(127, 104, 130);
@@ -224,7 +228,8 @@ border-style: none;
 border-radius: 8px;
 border-width: 2px;
 border-color: rgb(159, 155, 204);
-background-color: qlineargradient(spread:pad, x1:0.062, y1:0.0962273, x2:0.994, y2:0.937, stop:0 rgba(75, 73, 140, 255), stop:1 rgba(110, 87, 135, 255))</string>
+background-color: qlineargradient(spread:pad, x1:0.062, y1:0.0962273, x2:0.994, y2:0.937, stop:0 rgba(75, 73, 140, 255), stop:1 rgba(110, 87, 135, 255));
+font: 19pt &quot;Segoe UI&quot;;</string>
      </property>
      <property name="text">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;WES&lt;/span&gt; PROJECT BROWSER&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -245,13 +250,24 @@ background-color: qlineargradient(spread:pad, x1:0.062, y1:0.0962273, x2:0.994, 
       </font>
      </property>
      <property name="styleSheet">
-      <string notr="true">border-radius: 12px;
+      <string notr="true">QListWidget {
+border-radius: 12px;
 border-width:0px;
-background-color: rgb(13, 13, 13);</string>
+background-color: rgb(26, 26, 26);
+}
+QListWidget::item:selected{
+border-color: rgb(141, 127, 209);
+background-color: rgb(86, 77, 127);
+}</string>
      </property>
      <item>
       <property name="text">
        <string>xxx.hip</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>xxxx.hip</string>
       </property>
      </item>
     </widget>
@@ -287,7 +303,14 @@ background-color: rgb(13, 13, 13);</string>
        <property name="font">
         <font>
          <family>Microsoft YaHei UI</family>
+         <pointsize>11</pointsize>
+         <weight>50</weight>
+         <italic>false</italic>
+         <bold>false</bold>
         </font>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">font: 11pt &quot;Microsoft YaHei UI&quot;;</string>
        </property>
        <property name="text">
         <string>场次</string>
@@ -301,13 +324,13 @@ background-color: rgb(13, 13, 13);</string>
       <widget class="QComboBox" name="scene">
        <property name="minimumSize">
         <size>
-         <width>15</width>
+         <width>50</width>
          <height>30</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>60</width>
+         <width>75</width>
          <height>16777215</height>
         </size>
        </property>
@@ -320,6 +343,7 @@ background-color: rgb(13, 13, 13);</string>
        <property name="styleSheet">
         <string notr="true">QComboBox {
 font: 11pt &quot;Microsoft YaHei UI&quot;;
+background-color: rgb(26, 26, 26);
 }</string>
        </property>
        <property name="editable">
@@ -344,7 +368,14 @@ font: 11pt &quot;Microsoft YaHei UI&quot;;
        <property name="font">
         <font>
          <family>Microsoft YaHei UI</family>
+         <pointsize>11</pointsize>
+         <weight>50</weight>
+         <italic>false</italic>
+         <bold>false</bold>
         </font>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">font: 11pt &quot;Microsoft YaHei UI&quot;;</string>
        </property>
        <property name="text">
         <string>镜头号</string>
@@ -358,13 +389,13 @@ font: 11pt &quot;Microsoft YaHei UI&quot;;
       <widget class="QComboBox" name="shot">
        <property name="minimumSize">
         <size>
-         <width>60</width>
+         <width>70</width>
          <height>30</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>120</width>
+         <width>130</width>
          <height>16777215</height>
         </size>
        </property>
@@ -377,6 +408,7 @@ font: 11pt &quot;Microsoft YaHei UI&quot;;
        <property name="styleSheet">
         <string notr="true">QComboBox {
 font: 11pt &quot;Microsoft YaHei UI&quot;;
+background-color: rgb(26, 26, 26);
 }</string>
        </property>
        <property name="editable">
@@ -388,20 +420,27 @@ font: 11pt &quot;Microsoft YaHei UI&quot;;
       <widget class="QLabel" name="content_label">
        <property name="minimumSize">
         <size>
-         <width>80</width>
+         <width>50</width>
          <height>0</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>80</width>
+         <width>50</width>
          <height>16777215</height>
         </size>
        </property>
        <property name="font">
         <font>
          <family>Microsoft YaHei UI</family>
+         <pointsize>11</pointsize>
+         <weight>50</weight>
+         <italic>false</italic>
+         <bold>false</bold>
         </font>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">font: 11pt &quot;Microsoft YaHei UI&quot;;</string>
        </property>
        <property name="text">
         <string>内容</string>
@@ -421,7 +460,7 @@ font: 11pt &quot;Microsoft YaHei UI&quot;;
        </property>
        <property name="maximumSize">
         <size>
-         <width>150</width>
+         <width>2000</width>
          <height>30</height>
         </size>
        </property>
@@ -438,7 +477,11 @@ font: 11pt &quot;Microsoft YaHei UI&quot;;
         </font>
        </property>
        <property name="styleSheet">
-        <string notr="true">border-radius: 5px;</string>
+        <string notr="true">background-color: rgb(26, 26, 26);
+font: 11pt &quot;Microsoft YaHei UI&quot;;
+border-radius: 5px;
+border-style: none;
+</string>
        </property>
        <property name="text">
         <string>vfx</string>
@@ -498,7 +541,7 @@ font: 11pt &quot;Microsoft YaHei UI&quot;;
       <widget class="QPushButton" name="save_small_ver">
        <property name="minimumSize">
         <size>
-         <width>115</width>
+         <width>105</width>
          <height>24</height>
         </size>
        </property>
@@ -517,6 +560,7 @@ font: 11pt &quot;Microsoft YaHei UI&quot;;
         <string notr="true">QPushButton {
 border-radius: 12px;
 background-color:rgb(75, 74, 115);
+font: 9pt &quot;Microsoft YaHei UI&quot;;
 }
 QPushButton:hover{
 background-color:rgb(109, 109, 150);
@@ -535,7 +579,7 @@ background-color:rgb(109, 109, 150);
       <widget class="QPushButton" name="save_big_ver">
        <property name="minimumSize">
         <size>
-         <width>115</width>
+         <width>105</width>
          <height>24</height>
         </size>
        </property>
@@ -557,6 +601,7 @@ background-color:rgb(109, 109, 150);
         <string notr="true">QPushButton {
 border-radius: 12px;
 background-color:rgb(75, 74, 115);
+font: 9pt &quot;Microsoft YaHei UI&quot;;
 }
 QPushButton:hover{
 background-color:rgb(109, 109, 150);
@@ -572,7 +617,7 @@ background-color:rgb(109, 109, 150);
       <widget class="QPushButton" name="load_hip">
        <property name="minimumSize">
         <size>
-         <width>115</width>
+         <width>105</width>
          <height>24</height>
         </size>
        </property>
@@ -594,6 +639,7 @@ background-color:rgb(109, 109, 150);
         <string notr="true">QPushButton {
 border-radius: 12px;
 background-color:rgb(75, 74, 115);
+font: 9pt &quot;Microsoft YaHei UI&quot;;
 }
 QPushButton:hover{
 background-color:rgb(109, 109, 150);
@@ -609,7 +655,7 @@ background-color:rgb(109, 109, 150);
       <widget class="QPushButton" name="open_folder">
        <property name="minimumSize">
         <size>
-         <width>115</width>
+         <width>105</width>
          <height>24</height>
         </size>
        </property>
@@ -631,6 +677,7 @@ background-color:rgb(109, 109, 150);
         <string notr="true">QPushButton {
 border-radius: 12px;
 background-color:rgb(75, 74, 115);
+font: 9pt &quot;Microsoft YaHei UI&quot;;
 }
 QPushButton:hover{
 background-color:rgb(109, 109, 150);
@@ -657,16 +704,47 @@ background-color:rgb(109, 109, 150);
    <item row="2" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout_8">
      <item>
-      <widget class="QComboBox" name="browse_mode">
+      <widget class="QPushButton" name="root_config">
        <property name="minimumSize">
         <size>
-         <width>20</width>
-         <height>23</height>
+         <width>0</width>
+         <height>0</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>100</width>
+         <width>24</width>
+         <height>24</height>
+        </size>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+	border-radius: 10px;
+	background-color: rgb(80, 80, 86);
+}
+QPushButton:hover{
+background-color:rgb(89, 89, 89);
+}
+QPushButton:pressed{
+background-color:rgb(134, 134, 134);
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="browse_mode">
+       <property name="minimumSize">
+        <size>
+         <width>92</width>
+         <height>26</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>102</width>
          <height>16777215</height>
         </size>
        </property>
@@ -679,6 +757,8 @@ background-color:rgb(109, 109, 150);
        <property name="styleSheet">
         <string notr="true">QComboBox {
 border-radius: 6px;
+font: 11pt &quot;Microsoft YaHei UI&quot;;
+background-color: rgb(26, 26, 26);
 }
 
 QComboBox::drop-down {
@@ -708,8 +788,8 @@ QComboBox::drop-down {
       <widget class="QComboBox" name="proj_name">
        <property name="minimumSize">
         <size>
-         <width>0</width>
-         <height>23</height>
+         <width>25</width>
+         <height>26</height>
         </size>
        </property>
        <property name="font">
@@ -719,22 +799,24 @@ QComboBox::drop-down {
         </font>
        </property>
        <property name="styleSheet">
-        <string notr="true">border-radius: 6px;</string>
+        <string notr="true">border-radius: 6px;
+font: 11pt &quot;Microsoft YaHei UI&quot;;
+background-color: rgb(26, 26, 26);</string>
        </property>
       </widget>
      </item>
-     <item>
+     <item alignment="Qt::AlignVCenter">
       <widget class="QPushButton" name="new_proj">
        <property name="minimumSize">
         <size>
-         <width>115</width>
-         <height>25</height>
+         <width>80</width>
+         <height>27</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
          <width>115</width>
-         <height>25</height>
+         <height>18</height>
         </size>
        </property>
        <property name="font">
@@ -747,6 +829,7 @@ QComboBox::drop-down {
         <string notr="true">QPushButton {
 border-radius: 6px;
 background-color:rgb(49, 108, 74);
+font: 10pt &quot;Microsoft YaHei UI&quot;;
 }
 QPushButton:hover{
 background-color:rgb(69, 131, 95);

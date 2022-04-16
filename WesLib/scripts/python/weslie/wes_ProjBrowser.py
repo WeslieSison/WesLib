@@ -4,92 +4,26 @@ import os
 import re
 import time
 import json
-from hutil.Qt import QtWidgets, QtUiTools
+from hutil.Qt import QtWidgets, QtUiTools, QtCore, QtGui
 
-
-def initialize_config():
-    initial_config = {}
-    # Check and Load Config
-    jsonfile = hou.expandString("$WESLIB/python_panels") + "/project_browser_config.json"
-    if os.path.exists(jsonfile):
-        with open(jsonfile) as json_file:
-            initial_config = json.load(json_file)
-    else:
-        input_confirm, input_info = hou.ui.readMultiInput(u"Initialize Your Browser | 初始化配置", ('Projects Root','Tests Root','Default_ResX','Default_ResY','Default_FPS'),
-            initial_contents = ("","","1920","1080","25"),
-            title = "Input Config",
-            default_choice = 0, close_choice = 1
-            )
-        if input_confirm == 0:
-            check = False
-            projects_root =  input_info[0]
-            tests_root = input_info[1]
-            default_resx = input_info[2]
-            default_resy = input_info[3]
-            default_fps = input_info[4]
-            # Check if Every Info is OK
-            type_is_ok = True
-            check_digit_list = input_info[2:5]
-            for info in check_digit_list:
-                if info == "" or info.isspace() or not info.isdigit():
-                    hou.ui.displayMessage(u"Wrong Input Type | 输入的信息格式错误",severity=hou.severityType.Error)
-                    type_is_ok = False
-                    break
-            if type_is_ok:
-                if not os.path.exists(projects_root) or os.path.isfile(projects_root):
-                    hou.ui.displayMessage(u"Projects Root does not exists | 项目根目录路劲不存在",severity=hou.severityType.Error)
-                elif not os.path.exists(tests_root) or os.path.isfile(tests_root):
-                    hou.ui.displayMessage(u"Tests Root does not exists | 测试根目录路劲不存在",severity=hou.severityType.Error)
-                else:
-                    check = True
-            
-            # Create Config File
-            if check:
-                projects_root = projects_root.replace("\\","/")
-                tests_root = tests_root.replace("\\","/")
-                if projects_root[-1] != "/":
-                    projects_root += "/"
-                if tests_root[-1] != "/":
-                    tests_root += "/"
-                initial_info = {
-                    "projects_root" : projects_root,
-                    "tests_root" : tests_root,
-                    "default_res" : [int(default_resx),int(default_resy)],
-                    "default_fps" : int(default_fps)
-                }
-                initial_info_json = json.dumps(initial_info)
-                config_dir = hou.expandString("$WESLIB/python_panels")
-                jsonfile = "/".join([config_dir, "project_browser_config.json"])
-                with open(jsonfile,"w") as config_file:
-                    config_file.write(initial_info_json)
-        initial_config = initialize_config()
-    return initial_config
-
-
-#Cutomize Config
-initial_config = initialize_config()
-projects_root = initial_config.get("projects_root")
-tests_root = initial_config.get("tests_root")
-default_res = initial_config.get("default_res")
-default_fps = initial_config.get("default_fps")
+mypath = __file__[:-19]
+mypath = mypath[:-22]
 
 #Project Structure
 concept_folder = ["01_Concept/01_Storyboard","01_Concept/02_Layout","01_Concept/03_Anim","01_Concept/04_Ref"]
 projects_folder_preset = [concept_folder,"02_Assets","03_HProject","04_Comp","05_Cut","06_Submit","07_Feedback"]
 hproject_name = "03_HProject"
 
-#Project Config
-test_names = os.listdir(tests_root)
-
 #Set UI Path
-uipath = hou.expandString("$WESLIB")+"/python_panels/ui/Wes_ProjBrowser.ui"
+uipath = mypath+"/python_panels/ui/Wes_ProjBrowser_ch.ui"
 
 
 class ProjBrowser(QtWidgets.QWidget):
     def __init__(self):
         super(ProjBrowser,self).__init__()
 
-        #Get Env
+        #Initialize
+        self.config_root()
         self.jobenv = hou.getenv("JOB")+"/"
 
         #Load UI File
@@ -116,6 +50,7 @@ class ProjBrowser(QtWidgets.QWidget):
         self.proj_name = self.ui.findChild(QtWidgets.QComboBox,"proj_name")
         self.browse_mode = self.ui.findChild(QtWidgets.QComboBox,"browse_mode")
         self.new_proj = self.ui.findChild(QtWidgets.QPushButton, "new_proj")
+        self.root_config = self.ui.findChild(QtWidgets.QPushButton, "root_config")
         
 
 
@@ -143,12 +78,21 @@ class ProjBrowser(QtWidgets.QWidget):
         self.hiplist.doubleClicked.connect(self.loadhip)
         self.load_hip.clicked.connect(self.loadhip)
         self.open_folder.clicked.connect(self.openfolder)
+        self.root_config.clicked.connect(self.config_root_setting)
 
-        #Set Layout        
+        #Set Icon
+        config_icon = QtGui.QIcon()
+        config_icon.addPixmap(QtGui.QPixmap(mypath+"/python_panels/ui/setting_96.png"))
+        self.root_config.setIcon(config_icon)
+        self.root_config.setIconSize(QtCore.QSize(18,18))
+
+        #Set Layout   
+        self.content.setAlignment(QtCore.Qt.AlignLeft)
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.ui)  
         self.setLayout(layout)
         
+
     def getshotinfo(self):
         self.jobenv = hou.getenv("JOB")+"/"
         try:
@@ -170,6 +114,7 @@ class ProjBrowser(QtWidgets.QWidget):
 
     def refreshprojnames(self):
         self.proj_name.clear()
+        #Project Mode
         if(self.browse_mode.currentText()=="Project"):
             self.scene.setEnabled(True)
             self.scene_label.setEnabled(True)
@@ -178,9 +123,20 @@ class ProjBrowser(QtWidgets.QWidget):
             self.new_shot.setEnabled(True)
             self.enter_shot.setEnabled(True)
             self.new_proj.setEnabled(True)
-            proj_names = os.listdir(projects_root)
-            proj_names.reverse()
+            if os.path.exists(self.projects_root):
+                proj_names = os.listdir(self.projects_root)
+                proj_names.reverse()
+            else:
+                proj_names = [u"项目根目录不存在，请点击左侧小齿轮配置"]
+                self.scene.setEnabled(False)
+                self.scene_label.setEnabled(False)
+                self.shot.setEnabled(False)
+                self.shot_label.setEnabled(False)
+                self.new_shot.setEnabled(False)
+                self.enter_shot.setEnabled(False)
+                self.new_proj.setEnabled(False)
             self.proj_name.addItems(proj_names)
+        #Test Mode
         elif(self.browse_mode.currentText()=="Test"):
             self.scene.setEnabled(False)
             self.scene_label.setEnabled(False)
@@ -189,9 +145,20 @@ class ProjBrowser(QtWidgets.QWidget):
             self.new_shot.setEnabled(True)
             self.enter_shot.setEnabled(True)
             self.new_proj.setEnabled(True)
-            proj_names = os.listdir(tests_root)
-            proj_names.reverse()
+            if os.path.exists(self.tests_root):
+                proj_names = os.listdir(self.tests_root)
+                proj_names.reverse()
+            else:
+                proj_names = [u"测试根目录不存在，请点击左侧小齿轮配置"]
+                self.scene.setEnabled(False)
+                self.scene_label.setEnabled(False)
+                self.shot.setEnabled(False)
+                self.shot_label.setEnabled(False)
+                self.new_shot.setEnabled(False)
+                self.enter_shot.setEnabled(False)
+                self.new_proj.setEnabled(False)
             self.proj_name.addItems(proj_names)
+        #Custom Mode
         else:
             self.scene.setEnabled(False)
             self.scene_label.setEnabled(False)
@@ -227,13 +194,13 @@ class ProjBrowser(QtWidgets.QWidget):
 
     def loadconfig(self):
         projname = self.proj_name.currentText()
-        jsonpath = projects_root + projname + "/" + "project_config.json"
+        jsonpath = self.projects_root + projname + "/" + "project_config.json"
         #initial config data
         self.proj_config = {}
         self.date = ""
         self.projpurename = ""
-        self.res = default_res
-        self.fps = default_fps
+        self.res = self.default_res
+        self.fps = self.default_fps
         self.havescene = False
         self.haveshot = False
 
@@ -268,7 +235,7 @@ class ProjBrowser(QtWidgets.QWidget):
         self.scene.clear()
         projname = self.proj_name.currentText()
         if self.havescene:
-            proj_root = projects_root + projname +'/'+ hproject_name + "/"
+            proj_root = self.projects_root + projname +'/'+ hproject_name + "/"
             scene_list = []
             if os.path.exists(proj_root):
                 scenes = os.listdir(proj_root)
@@ -285,9 +252,9 @@ class ProjBrowser(QtWidgets.QWidget):
             proj_root = ""
             if self.havescene:
                 scene = self.scene.currentText()
-                proj_root = projects_root + projname+'/'+ hproject_name + "/SCENE_" + scene + "/"
+                proj_root = self.projects_root + projname+'/'+ hproject_name + "/SCENE_" + scene + "/"
             else:
-                proj_root = projects_root + projname+'/'+ hproject_name + "/"
+                proj_root = self.projects_root + projname+'/'+ hproject_name + "/"
             if os.path.exists(proj_root):
                 shots = os.listdir(proj_root)
                 for shot in shots:
@@ -313,7 +280,7 @@ class ProjBrowser(QtWidgets.QWidget):
         if self.browse_mode.currentText() == "Project":
             proj_pure_name = self.projpurename
             proj_name = self.proj_name.currentText()
-            proj_root = projects_root + proj_name +'/'+ hproject_name + "/"
+            proj_root = self.projects_root + proj_name +'/'+ hproject_name + "/"
         if self.browse_mode.currentText() == "Test":
             self.havescene = False
             self.haveshot = False
@@ -322,7 +289,7 @@ class ProjBrowser(QtWidgets.QWidget):
                 proj_pure_name = "_".join(proj_name.split("_")[1:])
             except:
                 proj_pure_name = proj_name
-            proj_root = tests_root + proj_name + "/"
+            proj_root = self.tests_root + proj_name + "/"
         proj_fps = self.fps
         scene = self.scene.currentText()
         shot = self.shot.currentText()
@@ -384,14 +351,14 @@ class ProjBrowser(QtWidgets.QWidget):
         proj_root = ""
         proj_dir = ""
         if(self.browse_mode.currentText()=="Project"):
-            proj_root = projects_root + proj_name +'/'+ hproject_name + "/"
+            proj_root = self.projects_root + proj_name +'/'+ hproject_name + "/"
             proj_dir = proj_root
             if self.havescene:
                 proj_dir += "SCENE_" +scene + "/"
             if self.haveshot:
                 proj_dir += "SHOT_" +shot +"/"
         elif(self.browse_mode.currentText()=="Test"):
-            proj_root = tests_root + proj_name +'/'
+            proj_root = self.tests_root + proj_name +'/'
             proj_dir = proj_root
         #proj_dir = proj_root+ "SCENE_"+scene + "/_SHOT_"+ shot + "/"
         if os.path.exists(proj_dir):
@@ -448,11 +415,11 @@ class ProjBrowser(QtWidgets.QWidget):
 
     def confignewproj(self):
         #Initial Message Box
-        msgbox = QtWidgets.QMessageBox(hou.qt.mainWindow())
+        msgbox = QtWidgets.QMessageBox()
+        msgbox.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
         msgbox.setWindowTitle('Config Project')
         msgbox.setText("Config the Project")
         msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
-
         #Set InputInfo
         now = time.localtime()
         date_label = QtWidgets.QLabel("Date")
@@ -471,13 +438,17 @@ class ProjBrowser(QtWidgets.QWidget):
 
         projname_label = QtWidgets.QLabel("Project Name")
         projname = QtWidgets.QLineEdit()
+        projname.setStyleSheet("border-style: none;")
 
         res_label = QtWidgets.QLabel("Res")
         resx = QtWidgets.QLineEdit("1920")
         resy = QtWidgets.QLineEdit("1080")
+        resx.setStyleSheet("border-style: none;")
+        resy.setStyleSheet("border-style: none;")
 
         fps_label = QtWidgets.QLabel("FPS")
         fps = QtWidgets.QLineEdit("25")
+        fps.setStyleSheet("border-style: none;")
         havescene = QtWidgets.QCheckBox("Scene")
         havescene.setChecked(True)
         haveshot = QtWidgets.QCheckBox("Shot")
@@ -527,7 +498,7 @@ class ProjBrowser(QtWidgets.QWidget):
             fps = int(fps.text())
             havescene = havescene.isChecked()
             haveshot = haveshot.isChecked()
-            proj_root = projects_root + date_year + date_mon + "_" + projname +"/"
+            proj_root = self.projects_root + date_year + date_mon + "_" + projname +"/"
             
 
             empty = False
@@ -558,7 +529,8 @@ class ProjBrowser(QtWidgets.QWidget):
 
     def confignewtest(self):
         #Initial Message Box
-        msgbox = QtWidgets.QMessageBox(hou.qt.mainWindow())
+        msgbox = QtWidgets.QMessageBox()
+        msgbox.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
         msgbox.setWindowTitle('Config Project')
         msgbox.setText("Config the Project")
         msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
@@ -617,7 +589,7 @@ class ProjBrowser(QtWidgets.QWidget):
             date_mon = str("%02d"%int(date_mon.currentText()))
             date_day = str("%02d"%int(date_day.currentText()))
             projname = projname.text()
-            test_root = tests_root + date_year + date_mon + date_day + "_" + projname +"/"
+            test_root = self.tests_root + date_year + date_mon + date_day + "_" + projname +"/"
             
             empty = False
             if projname == "" or projname.isspace():
@@ -632,3 +604,79 @@ class ProjBrowser(QtWidgets.QWidget):
 
             new_projname = date_year + date_mon + date_day + "_" + projname
         return new_projname
+
+    def config_root(self):
+        initial_config_info = {}
+        self.projects_root = ""
+        self.tests_root = ""
+        self.default_res = [1920,1080]
+        self.default_fps = 25
+        # Check and Load Config
+        jsonfile = mypath + "/python_panels" + "/project_browser_config.json"
+        if os.path.exists(jsonfile):
+            with open(jsonfile) as json_file:
+                initial_config_info = json.load(json_file)
+            print (initial_config_info)
+            self.projects_root = initial_config_info.get("projects_root")
+            self.tests_root = initial_config_info.get("tests_root")
+            self.default_res = initial_config_info.get("default_res")
+            self.default_fps = initial_config_info.get("default_fps")
+        else:
+            hou.ui.displayConfirmation(u"未找到初始化配置文件，请点击小齿轮图标进行初始化配置")
+        return initial_config_info
+
+    def config_root_setting(self):
+        # Pop up Config Window
+        input_confirm, input_info = hou.ui.readMultiInput(u"Initialize Your Browser | 初始化配置", ('Projects Root','Tests Root','Default_ResX','Default_ResY','Default_FPS'),
+            initial_contents = ("","","1920","1080","25"),
+            title = "Input Config",
+            buttons=("OK", "Cancel"),
+            default_choice=0, 
+            close_choice=1,
+            )
+        #print(input_confirm)
+        #print(input_info)
+        if input_confirm == 0:
+            check = False
+            projects_root =  input_info[0]
+            tests_root = input_info[1]
+            default_resx = input_info[2]
+            default_resy = input_info[3]
+            default_fps = input_info[4]
+            # Check if Every Info is OK
+            type_is_ok = True
+            check_digit_list = input_info[2:5]
+            for info in check_digit_list:
+                if info == "" or info.isspace() or not info.isdigit():
+                    hou.ui.displayMessage(u"Wrong Input Type | 输入的信息格式错误",severity=hou.severityType.Error)
+                    type_is_ok = False
+                    break
+            if type_is_ok:
+                if not os.path.exists(projects_root) or os.path.isfile(projects_root):
+                    hou.ui.displayMessage(u"Projects Root does not exists | 项目根目录路劲不存在",severity=hou.severityType.Error)
+                elif not os.path.exists(tests_root) or os.path.isfile(tests_root):
+                    hou.ui.displayMessage(u"Tests Root does not exists | 测试根目录路劲不存在",severity=hou.severityType.Error)
+                else:
+                    check = True
+            
+            # Create Config File
+            if check:
+                projects_root = projects_root.replace("\\","/")
+                tests_root = tests_root.replace("\\","/")
+                if projects_root[-1] != "/":
+                    projects_root += "/"
+                if tests_root[-1] != "/":
+                    tests_root += "/"
+                initial_info = {
+                    "projects_root" : projects_root,
+                    "tests_root" : tests_root,
+                    "default_res" : [int(default_resx),int(default_resy)],
+                    "default_fps" : int(default_fps)
+                }
+                initial_info_json = json.dumps(initial_info)
+                config_dir = mypath + "/python_panels"
+                jsonfile = "/".join([config_dir, "project_browser_config.json"])
+                with open(jsonfile,"w") as config_file:
+                    config_file.write(initial_info_json)
+            self.config_root()
+            self.refreshprojnames()

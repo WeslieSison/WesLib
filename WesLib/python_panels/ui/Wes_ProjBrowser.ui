@@ -438,7 +438,9 @@ font: 11pt &quot;Microsoft YaHei UI&quot;;
         </font>
        </property>
        <property name="styleSheet">
-        <string notr="true">border-radius: 5px;</string>
+        <string notr="true">border-radius: 5px;
+border-width: 0px;
+text-align: bottom center;</string>
        </property>
        <property name="text">
         <string>vfx</string>
