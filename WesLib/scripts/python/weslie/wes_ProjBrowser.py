@@ -616,7 +616,7 @@ class ProjBrowser(QtWidgets.QWidget):
         if os.path.exists(jsonfile):
             with open(jsonfile) as json_file:
                 initial_config_info = json.load(json_file)
-            print (initial_config_info)
+            # print (initial_config_info)
             self.projects_root = initial_config_info.get("projects_root")
             self.tests_root = initial_config_info.get("tests_root")
             self.default_res = initial_config_info.get("default_res")

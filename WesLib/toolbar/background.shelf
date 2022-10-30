@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <tool name="background0" label="background" icon="hicon:/SVGIcons.index?COP2_invert.svg">
+    <script scriptType="python"><![CDATA[node = hou.pwd()
+
+#SceneViewer
+scene_viewer = hou.ui.paneTabOfType(hou.paneTabType.SceneViewer)
+viewports = scene_viewer.viewports()
+persp_viewport = viewports[3]
+viewport_settings = persp_viewport.settings()
+get_ColorScheme = viewport_settings.colorScheme()
+
+
+Color_Scheme_Light = hou.viewportColorScheme.Light
+Color_Scheme_Dark = hou.viewportColorScheme.Dark
+
+
+if get_ColorScheme == Color_Scheme_Light:
+    viewport_settings.setColorScheme(hou.viewportColorScheme.Dark)
+elif get_ColorScheme == Color_Scheme_Dark:
+    viewport_settings.setColorScheme(hou.viewportColorScheme.Light)
+
+]]></script>
+  </tool>
+</shelfDocument>

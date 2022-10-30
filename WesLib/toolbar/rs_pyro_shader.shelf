@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <tool name="rs_pyro_shader" label="RS Pyro Shader" icon="hicon:/SVGIcons.index?SHELF_convert_to_fire.svg">
+    <script scriptType="python"><![CDATA[import hou
+from weslie import wes_Utils as wesutil
+
+node = hou.selectedNodes()[-1]
+
+#Build Volume Shader
+matnet = hou.node(str("%s/matnet"%node.path()))
+mat_builder = matnet.createNode("rs_usd_material_builder","Pyro_Shader_Redshift")
+mat_builder.moveToGoodPosition()
+hou.node(str("%s/StandardMaterial1"%mat_builder.path())).destroy()
+hou.node(str("%s/subinput1"%mat_builder.path())).destroy()
+volume_standard = mat_builder.createNode("redshift::Volume","Volume_Standard")
+switch_to_scatter = volume_standard.createOutputNode("redshift::vopSwitch","switch_to_scatter")
+volume_scatter = switch_to_scatter.createInputNode(1,"redshift::Volume","Volume_Scatter")
+switch_to_ce = switch_to_scatter.createOutputNode("redshift::vopSwitch","switch_to_ce")
+volume_ce = switch_to_ce.createInputNode(1,"redshift::Volume","Volume_Ce")
+hou.node(str("%s/redshift_usd_material1"%mat_builder.path())).setInput(4,switch_to_ce)
+mat_builder.layoutChildren()
+
+
+#Set Shader Parameters
+for vol_shader in [volume_scatter,volume_ce]:
+    vol_shader.parmTuple("emission_ramp2c").set([0,0,0])
+volume_scatter.setParms({"emission_mode":"1"})
+volume_ce.setParms({"emission_mode":"2"})
+
+
+#Link Density Parameters
+density_parm_dict = {
+    "smokecolor":"scatter_tint",
+    "shadowcolor":"absorption_tint",
+    "shadowint":"shadow_density_scale",
+    "smoke_volumename":"density_name",
+    "diffuse_volumename":"scatter_color_name"
+}
+for vol_shader in [volume_standard,volume_scatter,volume_ce]:
+    vol_shader.parm("absorption_coeff").set(vol_shader.parm("scatter_coeff"))
+    vol_shader.parm("scatter_coeff").setExpression(str("1.5*ch('%s')"%node.parm("densityscale").path()))
+    wesutil.linkParms(node,vol_shader,density_parm_dict)
+
+
+#Link Fire Parameters
+fire_parm_dict = {
+    "firek_volumename":"emission_color_name",
+    "firecolor_volumename":"emission_name"
+}
+from pyro2 import xferLinkParm
+xferLinkParm(node.parm("firecolorramp"),volume_standard.parm("emission_ramp"),True)
+wesutil.linkParms(node,volume_standard,fire_parm_dict)
+volume_standard.parm("emission_old_max").set(node.parm("firecolorrangey"))
+volume_standard.parm("emission_scale").setExpression(str("ch('%s')*ch('%s')"%(node.parm("kfire").path(),node.parm("enablefire").path())))
+
+
+#Link Scatter Parameters
+scatter_parm_dict = {
+    "kscatter":"emission_scale",
+    "scattermask_volumename":"emission_name",
+    "scatter_volumename":"emission_color_name"
+}
+wesutil.linkParms(node,volume_scatter,scatter_parm_dict)
+
+
+#Link Ce Parameters
+ce_parm_dict = {
+    "ce_volumename":"emission_name",
+    "ce_volumename":"emission_color_name"
+}
+wesutil.linkParms(node,volume_ce,ce_parm_dict)
+
+#Link Switch
+switch_to_scatter.parm("RS_switch").set(node.parm("enablescatter"))
+switch_to_ce.parm("RS_switch").set(node.parm("baketoce"))]]></script>
+  </tool>
+</shelfDocument>

@@ -5,80 +5,82 @@
  Note, that two definitions of the same element are not allowed in
  a single file. -->
 
-  <tool name="Ar_Pyro_Convert" label="AR Pyro Convert" icon="hicon:/SVGIcons.index?SHELF_fireball.svg">
+  <tool name="Ar_Pyro_Shader" label="AR Pyro Shader" icon="hicon:/SVGIcons.index?SHELF_convert_to_fire.svg">
     <script scriptType="python"><![CDATA[import hou
-matnet = hou.node("/mat")
-selects = hou.selectedNodes()
-shaders = []
-for select in selects:
-    if select.type().name()=="pyropostprocess":
+from weslie import wes_Utils as wesutil
 
-        #Get Parameters
-        pp_bind_density = select.parm("bind_density").eval()
-        pp_bind_temperature = select.parm("bind_temperature").eval()
-        pp_bind_flame = select.parm("bind_flame").eval()
-        pp_density_scale = select.parm("s_densityscale").eval()
-        pp_smoke_color = select.parmTuple("s_color").eval()
-        pp_fire_int = select.parm("fi_int").eval()
-        pp_flame_range_min = select.parm("fi_fitsrcmin").eval()
-        pp_flame_range_max = select.parm("fi_fitsrcmax").eval()
-        pp_flame_ramp = select.parm("fi_ramp").evalAsRamp()
-        pp_fc_mode = select.parm("fc_colormode").eval()
-        pp_temp_scale = select.parm("fc_int").eval()
-        pp_temp_range_min = select.parm("fc_rampmin").eval()
-        pp_temp_range_max = select.parm("fc_rampmax").eval()
-        pp_fc_ramp = select.parmTuple("fc_colorramp").evalAsRamps()
-        pp_fc_bbkelvin = select.parm("fc_bbtemp").eval()
-        pp_fc_mode = select.parm("fc_colormode").evalAsString()
+node = hou.selectedNodes()[-1]
 
-        #Create Basic Shader Nodes
-        shader = matnet.createNode("arnold_materialbuilder", "ar_"+select.name())
-        shader.moveToGoodPosition()
-        shaders.append(shader)
-        out = shader.children()[0]
-        volume = out.createInputNode(2,"standard_volume")
+#Build Volume Shader
+matnet = hou.node(str("%s/matnet"%node.path()))
+mat_builder = matnet.createNode("arnold_materialbuilder","Pyro_Shader_Arnold")
+mat_builder.moveToGoodPosition()
+volume_standard = mat_builder.createNode("arnold::standard_volume")
+hou.node(str("%s/OUT_material"%mat_builder.path())).setInput(2,volume_standard)
 
-        #Create Nodes
-        flame_mult = volume.createInputNode(5,"arnold::multiply","Emission_Intensity")
-        flame_ramp = flame_mult.createInputNode(0,"ramp_float","flame_ramp")
-        tem_ramp = volume.createInputNode(6,"ramp_rgb","temperature_ramp")
-        temperature_sample = tem_ramp.createInputNode(0,"volume_sample_float", "temperature_sample")
-        flame_sample = flame_ramp.createInputNode(0,"volume_sample_float", "flame_sample")
+color_correct1 = volume_standard.createInputNode(2,"arnold::color_correct")
+color_correct1.setParms({"gamma":2.2})
+color_correct1.createInputNode(0,"arnold::flat","smoke_color").parmTuple("color").set(node.parmTuple("smokecolor"))
 
-        #Set Parameters
-        volume.setParms({"density": pp_density_scale ,"density_channel": pp_bind_density, "emission_channel": ""})
-        volume.setParms({"temperature": pp_temp_scale, "temperature_channel": pp_bind_temperature ,"blackbody_kelvin": pp_fc_bbkelvin})
-        volume.parmTuple("scatter_color").set(pp_smoke_color)
-        
-        fm_input2r = flame_mult.parm("input2r")
-        flame_mult.setParms({"input2r": pp_fire_int, "input2g": fm_input2r, "input2b": fm_input2r})
+switch_to_ce = volume_standard.createInputNode(6,"arnold::switch_rgba")
+switch_to_ce.parm("index").set(node.parm("baketoce"))
+add1 = switch_to_ce.createInputNode(1,"arnold::add")
 
-        temperature_sample.setParms({"channel": pp_bind_temperature})
-        
+#Build Fire Nodes
+fire_k = add1.createInputNode(0,"arnold::multiply","fire_k")
+mult_fire = fire_k.createInputNode(0,"arnold::multiply","mult_fire")
+fire_color_ramp = mult_fire.createInputNode(0,"arnold::ramp_rgb","fire_color_ramp")
+fire_k_ramp = mult_fire.createInputNode(1,"arnold::ramp_float","fire_k_ramp")
+color_volume = fire_color_ramp.createInputNode(0,"arnold::volume_sample_float","color_volume")
+intensity_volume = fire_k_ramp.createInputNode(0,"arnold::volume_sample_float","intensity_volume")
 
-        flame_sample.setParms({"channel": pp_bind_flame, "input_min": pp_flame_range_min, "input_max": pp_flame_range_max})
-        flame_ramp.setParms({"ramp": pp_flame_ramp})
+#Build Scatter Nodes
+mult_scatter = add1.createInputNode(1,"arnold::multiply")
+scatter_volume = mult_scatter.createInputNode(0,"arnold::volume_sample_rgb","scatter_volume")
+scatter_mult_volume = mult_scatter.createInputNode(1,"arnold::volume_sample_float","scatter_mult_volume")
 
-        if pp_fc_mode == "ramp":
-            volume.setParms({"emission_mode": "channel"})
-            temperature_sample.setParms({"input_min": pp_temp_range_min, "input_max": pp_temp_range_max})
-            tem_ramp.parmTuple("ramp").set(pp_fc_ramp)
-        if pp_fc_mode == "physical":
-            volume.setParms({"emission_mode": "blackbody"})
+ce_volume = switch_to_ce.createInputNode(2,"arnold::volume_sample_rgb","ce_volume")
+mat_builder.layoutChildren()
+
+#Set Standard Volume constant parameter
+volume_standard.setParms({"emission_mode":"1","emission":0.5,"emission_channel":""})
+
+#Link Density Parms
+density_parm_dict = {
+    "densityscale":"density",
+    "smoke_volumename":"density_channel",
+    "diffuse_volumename":"scatter_color_channel"
+}
+wesutil.linkParms(node,volume_standard,density_parm_dict)
+volume_standard.parm("transparentr").setExpression(str("0.3678*ch('%s')"%node.parm("shadowcolorr").path()))
+volume_standard.parm("transparentg").setExpression("ch('transparentr')")
+volume_standard.parm("transparentb").setExpression("ch('transparentr')")
+
+#Link Fire Parms
+intensity_volume.parm("channel").set(node.parm("firek_volumename"))
+intensity_volume.parm("input_min").set(node.parm("firekrangex"))
+intensity_volume.parm("input_max").set(node.parm("firekrangey"))
+
+color_volume.parm("channel").set(node.parm("firecolor_volumename"))
+color_volume.parm("input_min").set(node.parm("firecolorrangex"))
+color_volume.parm("input_max").set(node.parm("firecolorrangey"))
+
+fire_k.parm("input2r").setExpression(str("ch('%s')*ch('%s')"%(node.parm("kfire").path(),node.parm("enablefire").path())))
+fire_k.parm("input2g").setExpression("ch('input2r')")
+fire_k.parm("input2b").setExpression("ch('input2r')")
+
+from pyro2 import xferLinkParm
+xferLinkParm(node.parm("firekramp"),fire_k_ramp.parm("ramp"),True)
+xferLinkParm(node.parm("firecolorramp"),fire_color_ramp.parm("ramp"),True)
 
 
-        shader.layoutChildren()
+#Link Scatter Parms
+scatter_volume.parm("channel").set(node.parm("scatter_volumename"))
+scatter_volume.parm("multiply").setExpression(str("ch('%s')*ch('%s')"%(node.parm("kscatter").path(),node.parm("enablescatter").path())))
+scatter_mult_volume.parm("channel").set(node.parm("scattermask_volumename"))
 
-        #Create Material Node and assign
-        mat = select.createOutputNode("material")
-        mat.parm("shop_materialpath1").set(shader.path())
-    
-    
-    
-        matnet.layoutChildren(shaders)
-    
-    
-    else:
-        hou.ui.displayMessage("è¯·éæ©Pyro Post Processèç¹")]]></script>
+#Link Ce Parms
+ce_volume.parm("channel").set(node.parm("ce_volumename"))
+]]></script>
   </tool>
 </shelfDocument>

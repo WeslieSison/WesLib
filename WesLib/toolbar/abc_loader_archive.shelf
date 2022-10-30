@@ -5,12 +5,11 @@
  Note, that two definitions of the same element are not allowed in
  a single file. -->
 
-  <tool name="abc_laoder" label="ABC Loader" icon="hicon:/SVGIcons.index?SOP_alembic.svg">
+  <tool name="abc_loader_archive" label="ABC Loader Archive" icon="hicon:/SVGIcons.index?SOP_alembic.svg">
     <script scriptType="python"><![CDATA[import weslie.wes_Utils as wesutil
 import importlib
 
 importlib.reload(wesutil)
-wesutil.abcloader()
-]]></script>
+wesutil.abcloader_archive()]]></script>
   </tool>
 </shelfDocument>

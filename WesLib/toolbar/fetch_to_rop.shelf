@@ -5,19 +5,11 @@
  Note, that two definitions of the same element are not allowed in
  a single file. -->
 
-  <tool name="Fetch Cam" label="Fetch Cam" icon="hicon:/SVGIcons.index?OBJ_fetch.svg">
+  <tool name="fetch_to_rop" label="Fetch to ROP" icon="hicon:/SVGIcons.index?OBJ_fetch.svg">
     <script scriptType="python"><![CDATA[import hou
-import weslie.wes_Utils as wesutil
-import importlib
+import weslie.wes_Util as wesutil
 
-importlib.reload(wesutil)
-
-sels = hou.selectedNodes()
-for sel in sels:
-    wesutil.fetchcam(sel)
-                ]]></script>
-    <keywordList>
-      <keyword>Fetch Camera From ABC</keyword>
-    </keywordList>
+for sel in hou.selectedNodes():
+    wesutil.fetchcam(sel)]]></script>
   </tool>
 </shelfDocument>

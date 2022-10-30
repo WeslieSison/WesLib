@@ -5,101 +5,12 @@
  Note, that two definitions of the same element are not allowed in
  a single file. -->
 
-  <tool name="abc_loader_adv" label="ABC Folder Loader" icon="hicon:/SVGIcons.index?SOP_alembic.svg">
-    <script scriptType="python"><![CDATA[import hou
-import os
+  <tool name="abc_loader_adv" label="ABC Loader Folder" icon="hicon:/SVGIcons.index?SOP_alembic.svg">
+    <script scriptType="python"><![CDATA[import weslie.wes_Utils as wesutil
+import importlib
 
-
-abc_dirs = hou.ui.selectFile( 
-    start_directory = "$HIP/",
-    title = "éæ©ABCæä»¶å¤¹" , 
-    file_type = hou.fileType.Directory, 
-    multiple_select = True, 
-)
-
-dirs = abc_dirs.split(" ; ")
-abc_kind_files_all = []
-abc_kinds = []
-
-#Get Root Path
-dir_root = dirs[0].split("/")
-del dir_root[-1]
-del dir_root[-1]
-dir_root = "/".join(dir_root)
-
-#Get Data
-for abc_dir in dirs:
-    abc_dir_abs = hou.expandString(abc_dir)
-
-    abc_kind = abc_dir.split("/")[-2]
-    abc_kinds.append(abc_kind)
-
-    abc_files = os.listdir(abc_dir_abs)
-    
-    abc_kind_files = []
-    for abc_file in abc_files:
-        abc_kind_file = "/".join([abc_kind, abc_file])
-        abc_kind_files.append(abc_kind_file)
-        abc_kind_files_all.append(abc_kind_file)
-
-abc_kind_files_sel = hou.ui.selectFromTree(abc_kind_files_all, title = "éæ©éè¦çabcæä»¶")
-
-#Create GEO Nodes for each folder and create&merge alembic node for each sub-Object
-geo_nodes = []
-n = 0
-for abc_dir in dirs:
-    abc_kind = abc_kinds[n]
-    geo = hou.node("/obj").createNode("geo", abc_kind)
-    geo_nodes.append(geo)
-
-    alembic_nodes = []
-    for abc_kind_file_sel in abc_kind_files_sel:
-        if abc_kind_file_sel.find(abc_kind) != -1:
-
-            abc_name = abc_kind_file_sel.split("/")[-1]
-            abc_name = abc_name.split(".")
-            del abc_name[-1]
-            abc_name = ".".join(abc_name)
-
-            alembic = geo.createNode("alembic", abc_name)
-            alembic.parm("fileName").set(dir_root +"/"+ abc_kind_file_sel)
-            group = alembic.createOutputNode("groupcreate","group_"+abc_name)
-            group.setParms({"groupname":abc_name})
-            alembic_nodes.append(group)
-
-    merge = geo.createNode("merge")
-    for node in alembic_nodes:
-        merge.setNextInput(node)
-    
-    unpack = merge.createOutputNode("unpack")
-    unpack.setParms({"transfer_attributes":"*", "transfer_groups":"*"})
-    unpack.createOutputNode("convert").createOutputNode("null","OUT_Unpack")
-
-    out = merge.createOutputNode("null","OUT_Pack")
-    out.setRenderFlag(True)
-    out.setDisplayFlag(True)
-    
-    geo.layoutChildren()
-
-
-    n+=1
-
-#configure Global Scale
-sels = hou.selectedNodes()
-if len(sels) != 0 and sels[-1].type().category().label() == "Objects" and sels[-1].type().name() == "null":
-    scale = sels[-1]
-else:
-    scale = hou.node("/obj").createNode("null","Global_Scale")
-    scale.setParms({"scale":0.1})
-
-#connect geo_node to null
-for geo_node in geo_nodes:
-    geo_node.setInput(0,scale)
-
-#layout nodes
-geo_nodes.append(scale)
-hou.node("/obj").layoutChildren(geo_nodes)
-
+importlib.reload(wesutil)
+wesutil.abcloader_folder()
 ]]></script>
   </tool>
 </shelfDocument>
