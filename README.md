@@ -9,7 +9,7 @@
 
     我的文档/houdini(相关版本)/packages
 
-    <比如> 我的文档/houdini19.0/packages
+    <比如> 我的文档/houdini21.0/packages
     
 如果只想使用hda的话，
 只需要删除掉WesLib文件夹内除了otls的其他文件夹
@@ -27,7 +27,7 @@
 * 使用中有需求和问题的话及时联系我哦
 Guide Document will be updated soon
 Contact me if you have any issue
-
+502563243@qq.com
 
 ---------------------------
 
