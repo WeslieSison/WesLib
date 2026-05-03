@@ -1,16 +1,46 @@
 {
-	"fileversion":"18.5.408",
+	"fileversion":"20.5.332",
 	"name":"Arnold_Radial",
 	"categories":"Standard",
 	"pane":"network",
 	"label":"Arnold_Radial",
 	"type":"submenu",
 	"items":{
+		"0":{
+			"label":"ar Image",
+			"type":"script_action",
+			"icon":"hicon:/SVGIcons.index?SOP_uvquickshade.svg",
+			"script":"pane = kwargs['pane']\nnetwork = pane.pwd()\nnet_editor = hou.ui.paneTabUnderCursor()\ncursor_pos = net_editor.cursorPosition()\n\n\nnode = network.createNode(\"arnold::image\")\nnode.setPosition(cursor_pos)\n"
+		},
+		"2":{
+			"label":"ar Ramp",
+			"type":"submenu",
+			"items":{
+				"0":{
+					"label":"ramp RGB",
+					"type":"script_action",
+					"icon":"hicon:/SVGIcons.index?VOP_blendregions.svg",
+					"script":"pane = kwargs['pane']\nnetwork = pane.pwd()\nnet_editor = hou.ui.paneTabUnderCursor()\ncursor_pos = net_editor.cursorPosition()\n\n\nnode = network.createNode(\"arnold::ramp_rgb::2\")\nnode.setPosition(cursor_pos)\n"
+				},
+				"4":{
+					"label":"ramp Float",
+					"type":"script_action",
+					"icon":"hicon:/SVGIcons.index?IMAGE_gamma.svg",
+					"script":"pane = kwargs['pane']\nnetwork = pane.pwd()\nnet_editor = hou.ui.paneTabUnderCursor()\ncursor_pos = net_editor.cursorPosition()\n\n\nnode = network.createNode(\"arnold::ramp_float::2\")\nnode.setPosition(cursor_pos)\n"
+				}
+			}
+		},
 		"4":{
-			"label":"ar_Solo",
+			"label":"ar Solo",
 			"type":"script_action",
 			"icon":"hicon:/SVGIcons.index?DOP_sopgeo.svg",
 			"script":"pane = kwargs['pane']\nnetwork = pane.pwd()\n\nselect = hou.selectedNodes()[0]\nnodes = network.children()\n\nfor node in nodes:\n    if node.type().name() == \"arnold_material\":\n        node.setInput(0,select,0)"
+		},
+		"6":{
+			"label":"ar Color Correct",
+			"type":"script_action",
+			"icon":"hicon:/SVGIcons.index?COP2_colorwheel.svg",
+			"script":"pane = kwargs['pane']\nnetwork = pane.pwd()\nnet_editor = hou.ui.paneTabUnderCursor()\ncursor_pos = net_editor.cursorPosition()\n\n\nnode = network.createNode(\"arnold::color_correct\")\nnode.setPosition(cursor_pos)\n"
 		}
 	}
 }
