@@ -6,8 +6,29 @@ import time
 import json
 from hutil.Qt import QtWidgets, QtUiTools, QtCore, QtGui
 
-mypath = __file__[:-19]
-mypath = mypath[:-22]
+
+def _norm_path(path):
+    return os.path.normpath(hou.text.expandString(path)).replace("\\", "/")
+
+
+def _join_path(*parts):
+    return os.path.normpath(os.path.join(*parts)).replace("\\", "/")
+
+
+def _hou_env_path(name):
+    value = hou.getenv(name)
+    if not value:
+        return ""
+    return _norm_path(value) + "/"
+
+
+def _year_items():
+    current_year = time.localtime()[0]
+    return [str(year) for year in range(current_year - 2, current_year + 3)]
+
+
+module_dir = os.path.dirname(os.path.abspath(__file__))
+mypath = _join_path(module_dir, os.pardir, os.pardir, os.pardir)
 
 #Project Structure
 concept_folder = ["01_Concept/01_Storyboard","01_Concept/02_Layout","01_Concept/03_Anim","01_Concept/04_Ref"]
@@ -15,7 +36,7 @@ projects_folder_preset = [concept_folder,"02_Assets","03_HProject","04_Comp","05
 hproject_name = "03_HProject"
 
 #Set UI Path
-uipath = mypath+"/python_panels/ui/Wes_ProjBrowser_ch.ui"
+uipath = _join_path(mypath, "python_panels", "ui", "Wes_ProjBrowser_ch.ui")
 
 
 class ProjBrowser(QtWidgets.QWidget):
@@ -24,7 +45,7 @@ class ProjBrowser(QtWidgets.QWidget):
 
         #Initialize
         self.config_root()
-        self.jobenv = hou.getenv("JOB")+"/"
+        self.jobenv = _hou_env_path("JOB")
 
         #Load UI File
         uiloader = QtUiTools.QUiLoader()
@@ -82,7 +103,7 @@ class ProjBrowser(QtWidgets.QWidget):
 
         #Set Icon
         config_icon = QtGui.QIcon()
-        config_icon.addPixmap(QtGui.QPixmap(mypath+"/python_panels/ui/setting_96.png"))
+        config_icon.addPixmap(QtGui.QPixmap(_join_path(mypath, "python_panels", "ui", "setting_96.png")))
         self.root_config.setIcon(config_icon)
         self.root_config.setIconSize(QtCore.QSize(18,18))
 
@@ -94,11 +115,11 @@ class ProjBrowser(QtWidgets.QWidget):
         
 
     def getshotinfo(self):
-        self.jobenv = hou.getenv("JOB")+"/"
+        self.jobenv = _hou_env_path("JOB")
         try:
             scene = re.findall(r"SCENE_\d*", self.jobenv)[-1]
             shot = re.findall(r"SHOT_\d*", self.jobenv)[-1]
-        except Exception as IndexError:
+        except IndexError:
             scene = ""
             shot = ""
         scene = scene.replace("SCENE_","")
@@ -109,8 +130,12 @@ class ProjBrowser(QtWidgets.QWidget):
     def gethipver(self):
         hipname = hou.hipFile.basename()
         digits = re.findall(r"\d+", hipname)
+        if len(digits) < 2:
+            hou.ui.displayMessage(u"Cannot find version number in current hip name | 当前 hip 文件名中没有找到版本号")
+            return False
         self.sver = digits[-1]
         self.bver = digits[-2]
+        return True
 
     def refreshprojnames(self):
         self.proj_name.clear()
@@ -168,14 +193,16 @@ class ProjBrowser(QtWidgets.QWidget):
             self.enter_shot.setEnabled(False)
             self.new_proj.setEnabled(False)
     def refresh_by_jobenv(self):
-        #print("Fuck")
-        self.jobenv = hou.getenv("JOB")+"/"
-        self.hipenv = hou.getenv("HIP")+"/"
+        self.jobenv = _hou_env_path("JOB")
+        self.hipenv = _hou_env_path("HIP")
         if os.path.exists(self.jobenv):
             self.refresh_hiplist(self.jobenv)
-        else:
+        elif os.path.exists(self.hipenv):
             print(u'$JOB path does not exist, using $HIP instead')
             self.refresh_hiplist(self.hipenv)
+        else:
+            self.hiplist.clear()
+            self.project_path.setText("")
 
     def refresh_hiplist(self, proj_dir):
         self.hiplist.clear()
@@ -194,7 +221,7 @@ class ProjBrowser(QtWidgets.QWidget):
 
     def loadconfig(self):
         projname = self.proj_name.currentText()
-        jsonpath = self.projects_root + projname + "/" + "project_config.json"
+        jsonpath = _join_path(self.projects_root, projname, "project_config.json")
         #initial config data
         self.proj_config = {}
         self.date = ""
@@ -235,7 +262,7 @@ class ProjBrowser(QtWidgets.QWidget):
         self.scene.clear()
         projname = self.proj_name.currentText()
         if self.havescene:
-            proj_root = self.projects_root + projname +'/'+ hproject_name + "/"
+            proj_root = _join_path(self.projects_root, projname, hproject_name) + "/"
             scene_list = []
             if os.path.exists(proj_root):
                 scenes = os.listdir(proj_root)
@@ -252,9 +279,9 @@ class ProjBrowser(QtWidgets.QWidget):
             proj_root = ""
             if self.havescene:
                 scene = self.scene.currentText()
-                proj_root = self.projects_root + projname+'/'+ hproject_name + "/SCENE_" + scene + "/"
+                proj_root = _join_path(self.projects_root, projname, hproject_name, "SCENE_" + scene) + "/"
             else:
-                proj_root = self.projects_root + projname+'/'+ hproject_name + "/"
+                proj_root = _join_path(self.projects_root, projname, hproject_name) + "/"
             if os.path.exists(proj_root):
                 shots = os.listdir(proj_root)
                 for shot in shots:
@@ -280,16 +307,20 @@ class ProjBrowser(QtWidgets.QWidget):
         if self.browse_mode.currentText() == "Project":
             proj_pure_name = self.projpurename
             proj_name = self.proj_name.currentText()
-            proj_root = self.projects_root + proj_name +'/'+ hproject_name + "/"
-        if self.browse_mode.currentText() == "Test":
+            proj_root = _join_path(self.projects_root, proj_name, hproject_name) + "/"
+        elif self.browse_mode.currentText() == "Test":
             self.havescene = False
             self.haveshot = False
             proj_name = self.proj_name.currentText()
             try:
                 proj_pure_name = "_".join(proj_name.split("_")[1:])
-            except:
+            except IndexError:
                 proj_pure_name = proj_name
-            proj_root = self.tests_root + proj_name + "/"
+            if not proj_pure_name:
+                proj_pure_name = proj_name
+            proj_root = _join_path(self.tests_root, proj_name) + "/"
+        else:
+            return
         proj_fps = self.fps
         scene = self.scene.currentText()
         shot = self.shot.currentText()
@@ -314,24 +345,26 @@ class ProjBrowser(QtWidgets.QWidget):
                 hou.ui.displayMessage(u"Shot Already Exists | 该镜头已存在噢")
         elif not self.havescene or not self.haveshot:
             scene_or_shot = False
-            if os.path.exists(proj_dir+hipname):
+            if os.path.exists(_join_path(proj_dir, hipname)):
                 path_exist = True
                 hou.ui.displayMessage(u"Shot Already Exists | 该镜头已存在噢")
         if not path_exist:
             create_mode = hou.ui.displayCustomConfirmation(u"Create New empty hip or Save current hip as new hip? | 新建空白hip还是直接另存当前hip?",buttons=(u"Create | 新建",u"Save as | 另存",u"Cancel | 取消"))
             if create_mode ==0:
                 if scene_or_shot:
-                    os.makedirs(proj_dir)
+                    if not os.path.exists(proj_dir):
+                        os.makedirs(proj_dir)
                 hou.hipFile.clear()
-                hou.hipFile.save(proj_dir+hipname)
+                hou.hipFile.save(_join_path(proj_dir, hipname))
                 hou.setFps(proj_fps)
                 os.environ["JOB"] = proj_dir
                 hou.allowEnvironmentToOverwriteVariable("JOB",True)
                 self.refresh_by_jobenv()
             elif create_mode ==1:
                 if scene_or_shot:
-                    os.makedirs(proj_dir)
-                hou.hipFile.save(proj_dir+hipname)
+                    if not os.path.exists(proj_dir):
+                        os.makedirs(proj_dir)
+                hou.hipFile.save(_join_path(proj_dir, hipname))
                 hou.setFps(proj_fps)
                 os.environ["JOB"] = proj_dir
                 hou.allowEnvironmentToOverwriteVariable("JOB",True)
@@ -341,6 +374,8 @@ class ProjBrowser(QtWidgets.QWidget):
 
     def setprojhip(self):
         hipenv = hou.getenv("HIP")
+        if not hipenv:
+            return
         os.environ["JOB"] = hipenv
         hou.allowEnvironmentToOverwriteVariable("JOB",True)
 
@@ -351,14 +386,14 @@ class ProjBrowser(QtWidgets.QWidget):
         proj_root = ""
         proj_dir = ""
         if(self.browse_mode.currentText()=="Project"):
-            proj_root = self.projects_root + proj_name +'/'+ hproject_name + "/"
+            proj_root = _join_path(self.projects_root, proj_name, hproject_name) + "/"
             proj_dir = proj_root
             if self.havescene:
                 proj_dir += "SCENE_" +scene + "/"
             if self.haveshot:
                 proj_dir += "SHOT_" +shot +"/"
         elif(self.browse_mode.currentText()=="Test"):
-            proj_root = self.tests_root + proj_name +'/'
+            proj_root = _join_path(self.tests_root, proj_name) + "/"
             proj_dir = proj_root
         #proj_dir = proj_root+ "SCENE_"+scene + "/_SHOT_"+ shot + "/"
         if os.path.exists(proj_dir):
@@ -372,7 +407,8 @@ class ProjBrowser(QtWidgets.QWidget):
 
         
     def savesmallversion(self):
-        self.gethipver()
+        if not self.gethipver():
+            return
         hipname = hou.hipFile.name()
         hiphead = "_".join(hipname.split("_")[0:-1])
         self.sver = str("%03d"%(int(self.sver)+1))
@@ -385,7 +421,8 @@ class ProjBrowser(QtWidgets.QWidget):
         self.refresh_by_jobenv()
 
     def savebigversion(self):
-        self.gethipver()
+        if not self.gethipver():
+            return
         hipname = hou.hipFile.name()
         hiphead = "_".join(hipname.split("_")[0:-1])
         self.sver = "001"
@@ -399,17 +436,27 @@ class ProjBrowser(QtWidgets.QWidget):
             hou.ui.displayMessage(u"Hip FIle Already Exists | 文件已存在(日后会优化该选项)")
 
     def loadhip(self):
-        hippath = self.project_path.text() + self.hiplist.selectedItems()[0].data(0)
+        selected_items = self.hiplist.selectedItems()
+        if not selected_items:
+            return
+        hippath = _join_path(self.project_path.text(), selected_items[0].data(0))
         hou.hipFile.load(hippath)
 
     def openfolder(self):
-        os.startfile(self.project_path.text())
+        folder = self.project_path.text()
+        if not folder or not os.path.exists(folder):
+            return
+        if hasattr(hou.ui, "showInFileBrowser"):
+            hou.ui.showInFileBrowser(folder)
+        elif hasattr(os, "startfile"):
+            os.startfile(folder)
 
     def makeprojdir(self, proj_root, projects_folder_preset):
         for folder in projects_folder_preset:
             if isinstance(folder, str):
-                dir = "/".join([proj_root, folder])
-                os.makedirs(dir)
+                directory = _join_path(proj_root, folder)
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
             elif isinstance(folder, list):
                 self.makeprojdir(proj_root,folder)
 
@@ -424,8 +471,7 @@ class ProjBrowser(QtWidgets.QWidget):
         now = time.localtime()
         date_label = QtWidgets.QLabel("Date")
         date_year = QtWidgets.QComboBox()
-        years = ["2021","2022","2023","2024"]
-        date_year.addItems(years)
+        date_year.addItems(_year_items())
         date_year.setCurrentText(str(now[0]))
         date_mon = QtWidgets.QComboBox()
         mons = []
@@ -493,19 +539,23 @@ class ProjBrowser(QtWidgets.QWidget):
             date_year = date_year.currentText()
             date_mon = str("%02d"%int(date_mon.currentText()))
             projname = projname.text()
+            if not resx.text().isdigit() or not resy.text().isdigit() or not fps.text().isdigit():
+                hou.ui.displayMessage(u"Wrong Input Type | 输入的信息格式错误",severity=hou.severityType.Error)
+                return ""
             resx = int(resx.text())
             resy = int(resy.text())
             fps = int(fps.text())
             havescene = havescene.isChecked()
             haveshot = haveshot.isChecked()
-            proj_root = self.projects_root + date_year + date_mon + "_" + projname +"/"
-            
+            new_projname = date_year + date_mon + "_" + projname
+            proj_root = _join_path(self.projects_root, new_projname) + "/"
 
-            empty = False
             if projname == "" or projname.isspace():
                 hou.ui.displayMessage(u"Empty Project Name | 空白项目名",severity=hou.severityType.Error)
+                return ""
             elif os.path.exists(proj_root):
                 hou.ui.displayMessage(u"Project Already Exists | 项目已存在",severity=hou.severityType.Error)
+                return ""
             else:
                 self.makeprojdir(proj_root,projects_folder_preset)
                 proj_info = {
@@ -521,10 +571,10 @@ class ProjBrowser(QtWidgets.QWidget):
                 print(proj_info)
                 print("------------------------------")
                 proj_info_json = json.dumps(proj_info)
-                jsonfile = "/".join([proj_root, "project_config.json"])
+                jsonfile = _join_path(proj_root, "project_config.json")
                 with open(jsonfile,"w") as config_file:
                     config_file.write(proj_info_json)
-            new_projname = date_year + date_mon + "_" + projname
+                return new_projname
         return new_projname
 
     def confignewtest(self):
@@ -539,8 +589,7 @@ class ProjBrowser(QtWidgets.QWidget):
         now = time.localtime()
         date_label = QtWidgets.QLabel("Date")
         date_year = QtWidgets.QComboBox()
-        years = ["2021","2022","2023","2024"]
-        date_year.addItems(years)
+        date_year.addItems(_year_items())
         date_year.setCurrentText(str(now[0]))
         date_mon = QtWidgets.QComboBox()
         mons = []
@@ -589,20 +638,21 @@ class ProjBrowser(QtWidgets.QWidget):
             date_mon = str("%02d"%int(date_mon.currentText()))
             date_day = str("%02d"%int(date_day.currentText()))
             projname = projname.text()
-            test_root = self.tests_root + date_year + date_mon + date_day + "_" + projname +"/"
+            new_projname = date_year + date_mon + date_day + "_" + projname
+            test_root = _join_path(self.tests_root, new_projname) + "/"
             
-            empty = False
             if projname == "" or projname.isspace():
                 hou.ui.displayMessage(u"Empty Test Name | 空白项目名",severity=hou.severityType.Error)
+                return ""
             elif os.path.exists(test_root):
                 hou.ui.displayMessage(u"Test Already Exists | 项目已存在",severity=hou.severityType.Error)
+                return ""
             else:
                 os.makedirs(test_root)
                 print("------------------------------")
                 print("Create Test Path: "+ test_root)
                 print("------------------------------")
-
-            new_projname = date_year + date_mon + date_day + "_" + projname
+                return new_projname
         return new_projname
 
     def config_root(self):
@@ -612,15 +662,15 @@ class ProjBrowser(QtWidgets.QWidget):
         self.default_res = [1920,1080]
         self.default_fps = 25
         # Check and Load Config
-        jsonfile = mypath + "/python_panels" + "/project_browser_config.json"
+        jsonfile = _join_path(mypath, "python_panels", "project_browser_config.json")
         if os.path.exists(jsonfile):
             with open(jsonfile) as json_file:
                 initial_config_info = json.load(json_file)
             # print (initial_config_info)
-            self.projects_root = initial_config_info.get("projects_root")
-            self.tests_root = initial_config_info.get("tests_root")
-            self.default_res = initial_config_info.get("default_res")
-            self.default_fps = initial_config_info.get("default_fps")
+            self.projects_root = initial_config_info.get("projects_root") or ""
+            self.tests_root = initial_config_info.get("tests_root") or ""
+            self.default_res = initial_config_info.get("default_res") or self.default_res
+            self.default_fps = initial_config_info.get("default_fps") or self.default_fps
         else:
             hou.ui.displayConfirmation(u"未找到初始化配置文件，请点击小齿轮图标进行初始化配置")
         return initial_config_info
@@ -661,8 +711,8 @@ class ProjBrowser(QtWidgets.QWidget):
             
             # Create Config File
             if check:
-                projects_root = projects_root.replace("\\","/")
-                tests_root = tests_root.replace("\\","/")
+                projects_root = _norm_path(projects_root)
+                tests_root = _norm_path(tests_root)
                 if projects_root[-1] != "/":
                     projects_root += "/"
                 if tests_root[-1] != "/":
@@ -674,8 +724,8 @@ class ProjBrowser(QtWidgets.QWidget):
                     "default_fps" : int(default_fps)
                 }
                 initial_info_json = json.dumps(initial_info)
-                config_dir = mypath + "/python_panels"
-                jsonfile = "/".join([config_dir, "project_browser_config.json"])
+                config_dir = _join_path(mypath, "python_panels")
+                jsonfile = _join_path(config_dir, "project_browser_config.json")
                 with open(jsonfile,"w") as config_file:
                     config_file.write(initial_info_json)
             self.config_root()
