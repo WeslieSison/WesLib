@@ -24,7 +24,7 @@ def _source_package_root():
     source_root = hou.getenv("WESLIB_SOURCE_ROOT") or hou.getenv("WESLIB_DEV_ROOT")
     if source_root:
         return _norm_path(source_root)
-    return _module_package_root()
+    return _package_root()
 
 
 def _replace_tree_with_backup(src, dst):
@@ -130,8 +130,17 @@ def updatepackage_fordeveloper():
     package_dir = _package_root()
     target_dir = _source_package_root()
     if os.path.abspath(package_dir) == os.path.abspath(target_dir):
-        hou.ui.displayMessage("Set WESLIB_SOURCE_ROOT or WESLIB_DEV_ROOT before updating developer files.")
-        return
+        target_dir = hou.ui.selectFile(
+            start_directory=package_dir,
+            title="Choose WesLib Developer Target Folder",
+            file_type=hou.fileType.Directory,
+        )
+        if not target_dir:
+            return
+        target_dir = _norm_path(target_dir)
+        if os.path.abspath(package_dir) == os.path.abspath(target_dir):
+            hou.ui.displayMessage("Source and target are the same WesLib folder.")
+            return
 
     confirm = True
     if os.path.exists(package_dir):
@@ -158,6 +167,9 @@ def updatepackage_fordeveloper():
 def updatepackage_foruser():
     target_path = _norm_path("$HOUDINI_USER_PREF_DIR/packages/WesLib")
     package_path = _source_package_root()
+    if os.path.abspath(package_path) == os.path.abspath(target_path):
+        hou.ui.displayMessage("WesLib is already running from the user package folder.")
+        return
 
     confirm = True
     if os.path.exists(package_path):
