@@ -3,6 +3,51 @@ import hou
 import os
 import shutil
 
+
+def _norm_path(path):
+    return os.path.normpath(hou.text.expandString(path))
+
+
+def _module_package_root():
+    module_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.normpath(os.path.join(module_dir, os.pardir, os.pardir, os.pardir))
+
+
+def _package_root():
+    weslib = hou.getenv("WESLIB")
+    if weslib:
+        return _norm_path(weslib)
+    return _module_package_root()
+
+
+def _source_package_root():
+    source_root = hou.getenv("WESLIB_SOURCE_ROOT") or hou.getenv("WESLIB_DEV_ROOT")
+    if source_root:
+        return _norm_path(source_root)
+    return _package_root()
+
+
+def _replace_tree_with_backup(src, dst):
+    src = os.path.abspath(src)
+    dst = os.path.abspath(dst)
+    if src == dst:
+        raise shutil.Error("Source and target are the same path: {0}".format(src))
+
+    backup = dst + ".bak"
+    if os.path.exists(backup):
+        shutil.rmtree(backup)
+    if os.path.exists(dst):
+        shutil.move(dst, backup)
+    try:
+        shutil.copytree(src, dst)
+    except Exception:
+        if os.path.exists(dst):
+            shutil.rmtree(dst)
+        if os.path.exists(backup):
+            shutil.move(backup, dst)
+        raise
+
+
 def copy_tree(src, dst, symlinks=False):
     names = os.listdir(src)
     if not os.path.isdir(dst):
@@ -52,19 +97,16 @@ def hou_copy_tree(src, dst, symlinks=False):
             i += 1
         try:
             shutil.copystat(src, dst)
-        except WindowsError:
+        except OSError:
             pass
-        except OSError as why:
-            errors.extend((src, dst, str(why)))
         if errors:
             #raise shutil.Error(errors)
-            hou.ui.displayMessage(errors)
+            hou.ui.displayMessage("\n".join([str(error) for error in errors]))
             operation.updateProgress(0)
 
 
 
 def updatepackage_fordeveloper():
-    houdini_ver = hou.applicationVersionString()[:-4]
     choosefiles = hou.ui.displayCustomConfirmation("choose files or dirs?",buttons=("dirs","files"))
     if choosefiles:
         selected_files = hou.ui.selectFile( 
@@ -80,10 +122,25 @@ def updatepackage_fordeveloper():
         multiple_select = True, 
         )
 
-    files = selected_files.split(" ; ")
+    if not selected_files:
+        return
 
-    package_dir = hou.text.expandString("$WESLIB")+"/"
-    target_dir = "S:/GitHub/Repository/WesLib/WesLib/"
+    files = [path for path in selected_files.split(" ; ") if path]
+
+    package_dir = _package_root()
+    target_dir = _source_package_root()
+    if os.path.abspath(package_dir) == os.path.abspath(target_dir):
+        target_dir = hou.ui.selectFile(
+            start_directory=package_dir,
+            title="Choose WesLib Developer Target Folder",
+            file_type=hou.fileType.Directory,
+        )
+        if not target_dir:
+            return
+        target_dir = _norm_path(target_dir)
+        if os.path.abspath(package_dir) == os.path.abspath(target_dir):
+            hou.ui.displayMessage("Source and target are the same WesLib folder.")
+            return
 
     confirm = True
     if os.path.exists(package_dir):
@@ -93,10 +150,14 @@ def updatepackage_fordeveloper():
             print("--- Updating WesLib ---")
             for afile in files:
                 absfile = hou.text.expandString(afile)
-                target_path =target_dir + absfile.replace(package_dir,"")
+                relpath = os.path.relpath(absfile, package_dir)
+                target_path = os.path.join(target_dir, relpath)
                 if os.path.isdir(absfile):
                     hou_copy_tree(absfile, target_path)
                 elif os.path.isfile(absfile):
+                    target_parent = os.path.dirname(target_path)
+                    if not os.path.exists(target_parent):
+                        os.makedirs(target_parent)
                     shutil.copy2(absfile,target_path)
             print("--- Update Finished ---")
     else:
@@ -104,21 +165,23 @@ def updatepackage_fordeveloper():
 
 
 def updatepackage_foruser():
-    houdini_ver = hou.applicationVersionString()[:-4]
-    
-    target_path = hou.expandString("$HOME")+"/Houdini"+houdini_ver+"/packages/WesLib"
-    package_path = "S:/GitHub/Repository/WesLib/WesLib/"
+    target_path = _norm_path("$HOUDINI_USER_PREF_DIR/packages/WesLib")
+    package_path = _source_package_root()
+    if os.path.abspath(package_path) == os.path.abspath(target_path):
+        hou.ui.displayMessage("WesLib is already running from the user package folder.")
+        return
 
     confirm = True
     if os.path.exists(package_path):
         if os.path.exists(target_path):
             confirm = hou.ui.displayConfirmation("确认是否要更新WesLib")
-            if confirm:
-                shutil.rmtree(target_path)
-                print("--- 预删除 ---")
         if confirm:
             print("--- 正在更新WesLib ---")
-            shutil.copytree(package_path,target_path)
+            try:
+                _replace_tree_with_backup(package_path,target_path)
+            except shutil.Error as err:
+                hou.ui.displayMessage(str(err))
+                return
             hou.ui.displayMessage("更新完成, 重启Houdini后生效")
     else:
         hou.ui.displayMessage("Package路径不存在")
@@ -142,12 +205,9 @@ def fetchcam(node):
     objnet = hou.node("/obj")
     node_pos = node.position()
 
-    kids = node.allNodes()
-    for kid in kids:
-        cams = []
-        if kid.type().name() == "cam":
-            cams.append(kid)
-        copycams = objnet.copyItems(cams, channel_reference_originals=True)
+    cams = [kid for kid in node.allNodes() if kid.type().name() == "cam"]
+    for kid in cams:
+        copycams = objnet.copyItems([kid], channel_reference_originals=True)
         for copycam in copycams:
             copy_pos = node_pos
             copy_pos += hou.Vector2(3,0)
@@ -175,7 +235,10 @@ def abcloader():
         multiple_select = True, 
         pattern = "*.abc"
     )
-    abc_list = abc_files.split(" ; ")
+    if not abc_files:
+        return
+
+    abc_list = [abc_file for abc_file in abc_files.split(" ; ") if abc_file]
     geo_nodes = []
     for abc_path in abc_list:
         abc_name = os.path.splitext(abc_path)[0]
@@ -221,7 +284,12 @@ def abcloaderfolder():
         file_type = hou.fileType.Directory, 
         multiple_select = True, 
     )
-    dirs = abc_dirs.split(" ; ")
+    if not abc_dirs:
+        return
+
+    dirs = [abc_dir for abc_dir in abc_dirs.split(" ; ") if abc_dir]
+    if not dirs:
+        return
     abc_kind_files_all = []
     abc_kinds = []
 
