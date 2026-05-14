@@ -39,7 +39,7 @@ Place files to
 
     MyDocument/houdini(version)/packages
     
-    <Exsample> MyDocument/houdini19.0/packages
+    <Exsample> MyDocument/houdini21.0/packages
 
 If you only want to use HDA,
 just delete all the folders inside WesLib except "/otls"
