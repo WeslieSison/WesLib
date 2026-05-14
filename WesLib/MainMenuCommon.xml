@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mainMenu>
+  <menuBar>
+    <subMenu id="weslie_menu">
+      <label>WESLIB</label>
+
+      <scriptItem>
+        <label>Only Update HDAs</label>
+        <scriptPath>$WESLIB/scripts/mainmenu/update_weslib_otls.py</scriptPath>
+      </scriptItem>
+    </subMenu>
+  </menuBar>
+</mainMenu>
