@@ -27,9 +27,9 @@
     <memberTool name="send_sim_to_ddl"/>
     <memberTool name="background0"/>
     <memberTool name="fetch_to_rop"/>
-    <memberTool name="script"/>
-    <memberTool name="projectManager"/>
     <memberTool name="fluidsource"/>
     <memberTool name="Fbx_Normals"/>
+    <memberTool name="aki_proj_browser"/>
+    <memberTool name="objmerge_clipboard"/>
   </toolshelf>
 </shelfDocument>

@@ -37,6 +37,49 @@ hproject_name = "03_HProject"
 
 #Set UI Path
 uipath = _join_path(mypath, "python_panels", "ui", "Wes_ProjBrowser_ch.ui")
+_MAX_QT_SIZE = 16777215
+
+
+def _text_width(font_metrics, text):
+    if hasattr(font_metrics, "horizontalAdvance"):
+        return font_metrics.horizontalAdvance(text)
+    return font_metrics.width(text)
+
+
+def _dpi_scale():
+    scales = [1.0]
+    if hasattr(hou.ui, "scaledSize"):
+        try:
+            scaled = float(hou.ui.scaledSize(100))
+            if scaled > 0:
+                scales.append(scaled / 100.0)
+        except Exception:
+            pass
+
+    app = QtWidgets.QApplication.instance()
+    screen = app.primaryScreen() if app and hasattr(app, "primaryScreen") else None
+    if screen:
+        scales.append(screen.logicalDotsPerInch() / 96.0)
+        scales.append(screen.devicePixelRatio())
+    return max(1.0, min(max(scales), 2.5))
+
+
+def _scaled_size(value, scale=None):
+    scale = _dpi_scale() if scale is None else scale
+    return int(round(value * scale))
+
+
+def _scale_stylesheet_lengths(widget, scale):
+    stylesheet = widget.styleSheet()
+    if not stylesheet:
+        return
+
+    def repl(match):
+        return match.group(1) + str(_scaled_size(int(match.group(2)), scale)) + match.group(3)
+
+    stylesheet = re.sub(r"(border-radius:\s*)(\d+)(px)", repl, stylesheet)
+    stylesheet = re.sub(r"(padding(?:-[a-z]+)?:\s*)(\d+)(px)", repl, stylesheet)
+    widget.setStyleSheet(stylesheet)
 
 
 class ProjBrowser(QtWidgets.QWidget):
@@ -106,6 +149,7 @@ class ProjBrowser(QtWidgets.QWidget):
         config_icon.addPixmap(QtGui.QPixmap(_join_path(mypath, "python_panels", "ui", "setting_96.png")))
         self.root_config.setIcon(config_icon)
         self.root_config.setIconSize(QtCore.QSize(18,18))
+        self._apply_dpi_aware_sizes()
 
         #Set Layout   
         self.content.setAlignment(QtCore.Qt.AlignLeft)
@@ -114,6 +158,87 @@ class ProjBrowser(QtWidgets.QWidget):
         self.setLayout(layout)
         
 
+
+    def _set_scaled_minimum_height(self, widget, base_height, scale, extra_padding=10):
+        metrics = QtGui.QFontMetrics(widget.font())
+        height = max(widget.minimumHeight(), _scaled_size(base_height, scale), metrics.height() + _scaled_size(extra_padding, scale))
+        widget.setMinimumHeight(height)
+        if widget.maximumHeight() < _MAX_QT_SIZE:
+            widget.setMaximumHeight(_MAX_QT_SIZE)
+        return height
+
+    def _set_scaled_minimum_width(self, widget, width):
+        widget.setMinimumWidth(width)
+        if widget.maximumWidth() < width:
+            widget.setMaximumWidth(_MAX_QT_SIZE)
+
+    def _combo_content_width(self, combo, scale):
+        metrics = QtGui.QFontMetrics(combo.font())
+        texts = [combo.itemText(index) for index in range(combo.count())]
+        if combo.currentText():
+            texts.append(combo.currentText())
+        text_width = max([_text_width(metrics, text) for text in texts] or [0])
+        return text_width + _scaled_size(44, scale)
+
+    def _apply_dpi_aware_sizes(self):
+        scale = _dpi_scale()
+
+        for layout in self.ui.findChildren(QtWidgets.QLayout):
+            spacing = layout.spacing()
+            if spacing > 0:
+                layout.setSpacing(_scaled_size(spacing, scale))
+            margins = layout.contentsMargins()
+            layout.setContentsMargins(
+                _scaled_size(margins.left(), scale),
+                _scaled_size(margins.top(), scale),
+                _scaled_size(margins.right(), scale),
+                _scaled_size(margins.bottom(), scale),
+            )
+
+        for button in self.ui.findChildren(QtWidgets.QPushButton):
+            if button is self.root_config:
+                continue
+            metrics = QtGui.QFontMetrics(button.font())
+            self._set_scaled_minimum_height(button, 25, scale, 10)
+            min_width = max(button.minimumWidth(), _text_width(metrics, button.text()) + _scaled_size(36, scale))
+            self._set_scaled_minimum_width(button, min_width)
+            button.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+            _scale_stylesheet_lengths(button, scale)
+
+        for label in self.ui.findChildren(QtWidgets.QLabel):
+            if label.maximumWidth() >= _MAX_QT_SIZE:
+                continue
+            metrics = QtGui.QFontMetrics(label.font())
+            min_width = _text_width(metrics, label.text()) + _scaled_size(10, scale)
+            self._set_scaled_minimum_width(label, min_width)
+            label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, label.sizePolicy().verticalPolicy())
+
+        for combo in self.ui.findChildren(QtWidgets.QComboBox):
+            self._set_scaled_minimum_height(combo, 26, scale, 8)
+            min_width = max(combo.minimumWidth(), self._combo_content_width(combo, scale))
+            if combo is self.browse_mode:
+                min_width = 150
+                combo.setMinimumWidth(min_width)
+                combo.setMaximumWidth(min_width)
+                combo.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+            else:
+                if combo in (self.scene, self.shot):
+                    min_width = max(min_width, 150)
+                combo.setMinimumWidth(min_width)
+                combo.setMaximumWidth(_MAX_QT_SIZE)
+                combo.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+
+        for line_edit in self.ui.findChildren(QtWidgets.QLineEdit):
+            self._set_scaled_minimum_height(line_edit, 26, scale, 8)
+            line_edit.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+
+        icon_button_size = _scaled_size(24, scale)
+        icon_size = _scaled_size(18, scale)
+        self.root_config.setMinimumSize(icon_button_size, icon_button_size)
+        self.root_config.setMaximumSize(icon_button_size, icon_button_size)
+        self.root_config.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.root_config.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        _scale_stylesheet_lengths(self.root_config, scale)
     def getshotinfo(self):
         self.jobenv = _hou_env_path("JOB")
         try:
