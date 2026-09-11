@@ -2,7 +2,6 @@
 *bak*.hda
 /WesLib/python/_panels/project/_browser/_config.json
 /WesLib/otls/backup/
-/WesLib/desktop/Wes_Default.desk
 /WesLib/scripts/python/weslie/.vscode/
 /WesLib/scripts/python/weslie/wes_ProjBrowser.py.bak_*
 *.pyc
